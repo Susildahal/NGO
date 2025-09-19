@@ -1,11 +1,9 @@
 'use client'
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, Users, Heart, Globe, HandHeart, AlertCircle, Menu, X, Link } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Users, Heart, Globe, HandHeart, AlertCircle, Menu, X } from 'lucide-react';
 import { auth } from '../../../utils/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-
-
 
 interface FormData {
   email: string;
@@ -30,10 +28,6 @@ const validatePassword = (password: string): string | undefined => {
 };
 
 export default function NGOLoginPortal() {
-
-  const handleclick =()=>{
-    router.push('/forgot-password');
-  }
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: ''
@@ -43,8 +37,11 @@ export default function NGOLoginPortal() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [isRegistering, setIsRegistering] = useState<boolean>(false);
   const router = useRouter();
+
+  const handleclick = () => {
+    router.push('/forgot-password');
+  }
 
   const validateForm = (): boolean => {
     const emailError = validateEmail(formData.email);
@@ -72,57 +69,31 @@ export default function NGOLoginPortal() {
     setAuthError(null);
     
     try {
-      if (isRegistering) {
-        // Create a new account
-        const userCredential = await createUserWithEmailAndPassword(
-          auth, 
-          formData.email, 
-          formData.password
-        );
-        
-        // Success - user is created and signed in
-        const user = userCredential.user;
-        console.log("User created:", user);
-        
-        // Redirect to dashboard
-        router.push('/dashboard');
-      } else {
-        // Sign in with existing account
-        const userCredential = await signInWithEmailAndPassword(
-          auth, 
-          formData.email, 
-          formData.password
-        );
-        
-        // Success - user is signed in
-        const user = userCredential.user;
-        console.log("User signed in:", user);
-        
-        // Redirect to dashboard
-        router.push('/dashboard');
-      }
+      // Sign in with existing account only
+      const userCredential = await signInWithEmailAndPassword(
+        auth, 
+        formData.email, 
+        formData.password
+      );
+      
+      // Success - user is signed in
+      const user = userCredential.user;
+      console.log("User signed in:", user);
+      
+      // Redirect to dashboard
+      router.push('/dashboard');
     } catch (error: any) {
       // Handle Firebase auth errors
       console.error("Auth error:", error);
       
-      if (isRegistering) {
-        if (error.code === 'auth/email-already-in-use') {
-          setAuthError('Email already in use. Please use a different email or sign in.');
-        } else if (error.code === 'auth/weak-password') {
-          setAuthError('Password is too weak. Please use a stronger password.');
-        } else {
-          setAuthError('Failed to create account. Please try again.');
-        }
-      } else { 
-        if (error.code === 'auth/invalid-credential' || 
-            error.code === 'auth/user-not-found' || 
-            error.code === 'auth/wrong-password') {
-          setAuthError('Invalid email or password. Please try again.');
-        } else if (error.code === 'auth/too-many-requests') {
-          setAuthError('Too many failed login attempts. Please try again later or reset your password.');
-        } else {
-          setAuthError('An error occurred. Please try again later.');
-        }
+      if (error.code === 'auth/invalid-credential' || 
+          error.code === 'auth/user-not-found' || 
+          error.code === 'auth/wrong-password') {
+        setAuthError('Invalid email or password. Please try again.');
+      } else if (error.code === 'auth/too-many-requests') {
+        setAuthError('Too many failed login attempts. Please try again later or reset your password.');
+      } else {
+        setAuthError('An error occurred. Please try again later.');
       }
     } finally {
       setIsLoading(false);
@@ -271,136 +242,103 @@ export default function NGOLoginPortal() {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="w-full lg:w-96 p-4 sm:p-6 lg:p-8 bg-white/90 backdrop-blur-sm lg:shadow-2xl lg:border-l border-gray-200">
+        <div className="w-full lg:w-96 p-4 sm:p-6 lg:p-8 bg-white lg:shadow-xl">
           <div className="max-w-sm mx-auto">
-            <div className="mb-6 lg:mb-8 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Heart className="h-8 w-8 text-white" />
+            <div className="mb-8 text-center">
+              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-6">
+                <Heart className="h-6 w-6 text-white" />
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-              <p className="text-sm text-gray-600">Sign in to access your NGO dashboard</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign In</h2>
+              <p className="text-gray-600">Welcome back to NGO Portal</p>
             </div>
 
-            <div className="space-y-4 sm:space-y-6">
+            <form className="space-y-6">
               {/* Email Field */}
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-3">
-                  Email Address
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    className={`w-full pl-12 pr-4 py-4 bg-white border-2 rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.email 
-                        ? 'border-red-300 bg-red-50' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    placeholder="Enter your email"
-                  />
-                </div>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className={`w-full px-4 py-3 border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                    errors.email 
+                      ? 'border-red-300 bg-red-50' 
+                      : 'border-gray-300 focus:border-blue-500'
+                  }`}
+                  placeholder="your@email.com"
+                />
                 {errors.email && (
-                  <p className="text-red-600 text-sm flex items-center mt-2 font-medium">
-                    <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                    {errors.email}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
                 )}
               </div>
 
               {/* Password Field */}
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    className={`w-full pl-12 pr-12 py-4 bg-white border-2 rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
+                    className={`w-full px-4 py-3 pr-12 border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
                       errors.password 
                         ? 'border-red-300 bg-red-50' 
-                        : 'border-gray-200 hover:border-gray-300'
+                        : 'border-gray-300 focus:border-blue-500'
                     }`}
                     placeholder="Enter your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-red-600 text-sm flex items-center mt-2 font-medium">
-                    <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                    {errors.password}
-                  </p>
+                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}
               </div>
 
               {/* Firebase Auth Error Message */}
               {authError && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-                  <div className="flex items-start">
-                    <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-700">{authError}</p>
-                  </div>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-red-600 text-sm">{authError}</p>
                 </div>
               )}
 
               {/* Forgot Password */}
               <div className="text-right">
-           
-                <button onClick={handleclick} className="text-sm text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-all">
-                  Forgot Password?
+                <button 
+                  type="button"
+                  onClick={handleclick} 
+                  className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+                >
+                  Forgot password?
                 </button>
-           
               </div>
 
               {/* Sign In Button */}
               <button
+                type="button"
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3"></div>
-                    <span>{isRegistering ? 'Creating Account...' : 'Signing In...'}</span>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                    Signing in...
                   </div>
                 ) : (
-                  isRegistering ? 'Create Account' : 'Login'
+                  'Sign In'
                 )}
               </button>
-
-              {/* Register/Login Switch */}
-              <div className="mt-6 text-center">
-                <p className="text-gray-600">
-                  {isRegistering ? 'Already have an account?' : "Don't have an account?"}
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      setIsRegistering(!isRegistering);
-                      setAuthError(null);
-                    }}
-                    className="ml-2 text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-all"
-                  >
-                    {isRegistering ? 'Sign In' : 'Create Account'}
-                  </button>
-                </p>
-              </div>
-
-          
-
-            
-
-        
-            </div>
+            </form>
           </div>
         </div>
       </div>
@@ -422,7 +360,6 @@ export default function NGOLoginPortal() {
               <button className="text-gray-600 hover:text-blue-600">About Us</button>
               <button className="text-gray-600 hover:text-blue-600">Support</button>
               <button className="text-gray-600 hover:text-blue-600">Resources</button>
-          
             </div>
 
             <div className="text-sm">

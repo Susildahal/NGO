@@ -5,7 +5,7 @@ import { auth } from '@/utils/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Eye, EyeOff, Mail, AlertCircle, UserPlus, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/DashboardLayout';
+import DashboardLayout from '@/components/Sidebar';
 
 
 interface AccountFormData {
