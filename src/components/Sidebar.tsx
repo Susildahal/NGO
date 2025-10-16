@@ -13,25 +13,25 @@ import {
   Users,
   FileText,
   Calendar,
-  HelpCircle,
   Menu,
   X,
   UserPlus,
   Bell,
   ChevronDown,
-  ChevronRight,
   Search,
   Moon,
   Sun,
   PanelLeft,
-  Shield,
+  Telescope,
+
   Database,
   MessageSquare,
-  MoreHorizontal,
+  Clock,
+ 
 } from 'lucide-react';
 import Link from 'next/link';
 
-interface DashboardLayoutProps {
+interface adminLayoutProps {
   children: React.ReactNode;
 }
 
@@ -43,7 +43,7 @@ interface NavigationItem {
   children?: NavigationItem[];
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function adminLayout({ children }: adminLayoutProps) {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -120,36 +120,37 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   const navigationItems: NavigationItem[] = [
-    { href: '/dashboard', label: 'Dashboard', icon: Home },
+   
     { 
-      href: '/dashboard/analytics', 
-      label: 'Analytics', 
+      href: '/admin/stats', 
+      label: 'Stats & Analytics', 
       icon: BarChart3,
       children: [
-        { href: '/dashboard/analytics/reports', label: 'Reports', icon: FileText },
-        { href: '/dashboard/analytics/metrics', label: 'Metrics', icon: BarChart3 },
+        { href: '/admin/stats/reports', label: 'Reports', icon: FileText },
+        { href: '/admin/stats/metrics', label: 'Metrics', icon: BarChart3 },
       ]
     },
     { 
-      href: '/dashboard/volunteers', 
+      href: '/admin/volunteers', 
       label: 'Volunteers', 
       icon: Users, 
       badge: '24',
       children: [
-        { href: '/dashboard/volunteers/active', label: 'Active', icon: Users },
-        { href: '/dashboard/volunteers/pending', label: 'Pending', icon: UserPlus },
+        { href: '/admin/volunteers/active', label: 'Active', icon: Users },
+        { href: '/admin/volunteers/pending', label: 'Pending', icon: UserPlus },
       ]
     },
-    { href: '/dashboard/accounts', label: 'Account Management', icon: UserPlus },
-    { href: '/dashboard/reports', label: 'Reports', icon: FileText },
-    { href: '/dashboard/events', label: 'Events', icon: Calendar, badge: '3' },
-    { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare, badge: '12' },
-    { href: '/dashboard/database', label: 'Database', icon: Database },
+    { href: '/admin/accounts', label: 'Account Management', icon: UserPlus },
+    { href: '/admin/stats', label: 'Stats and Analytics ', icon: BarChart3 },
+    { href: '/admin/events', label: 'Events', icon: Calendar, badge: '3' },
+    { href: '/admin/messages', label: 'Messages', icon: MessageSquare, badge: '12' },
+    { href: '/admin/history', label: 'History', icon: Clock },
+    { href: '/admin/missionandvision', label: 'Mission & Vision', icon: Telescope },
   ];
 
   const settingsItems: NavigationItem[] = [
-    { href: '/dashboard/profile', label: 'Profile', icon: User },
-    { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+    { href: '/admin/profile', label: 'Profile', icon: User },
+    { href: '/admin/settings', label: 'Settings', icon: Settings },
   ];
 
   const filteredNavigationItems = navigationItems.filter(item =>
@@ -269,7 +270,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const getCurrentPageTitle = () => {
     const currentItem = navigationItems.find(item => item.href === pathname) ||
                        settingsItems.find(item => item.href === pathname);
-    return currentItem?.label || 'Dashboard';
+    return currentItem?.label || 'admin';
   };
 
   return (
@@ -462,7 +463,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <p className="text-xs font-semibold text-gray-900 dark:text-white">
                       {user?.email?.split('@')[0] || 'Admin User'}
                     </p>
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400">Administrator</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400">Admin</p>
                   </div>
                   <div className="relative">
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/25">
