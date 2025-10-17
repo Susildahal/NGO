@@ -8,6 +8,9 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  query,
+  orderBy,
+  serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '@/utils/firebase';
 import { Button } from '@/components/ui/button';
@@ -47,6 +50,7 @@ interface Video {
   description: string;
   youtubeUrl: string;
   type: string;
+  date:string
 }
 
 export default function VideoDashboard() {
@@ -61,27 +65,33 @@ export default function VideoDashboard() {
     description: '',
     youtubeUrl: '',
     type: '',
+    date: Date.now().toString(),
   });
 
-  const fetchVideos = async () => {
-    setLoading(true);
-    try {
-      const querySnapshot = await getDocs(collection(db, 'videos'));
-      const videoList = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Video[];
-      setVideos(videoList);
-    } catch (error) {
-      console.error('Error fetching videos:', error);
-      toast.error('Failed to load videos');
-    }
-    setLoading(false);
-  };
+ 
 
-  useEffect(() => {
-    fetchVideos();
-  }, []);
+const fetchVideos = async () => {
+  setLoading(true);
+  try {
+   
+    const videosQuery = query(collection(db, 'videos'), orderBy('updatedAt', 'desc'));
+
+    const querySnapshot = await getDocs(videosQuery);
+    const videoList = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Video[];
+    setVideos(videoList);
+  } catch (error) {
+    console.error('Error fetching videos:', error);
+    toast.error('Failed to load videos');
+  }
+  setLoading(false);
+};
+
+useEffect(() => {
+  fetchVideos();
+}, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -94,29 +104,38 @@ export default function VideoDashboard() {
   };
 
   const handleAddOrUpdate = async () => {
-    if (!formData.title || !formData.description || !formData.youtubeUrl || !formData.type) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+  if (!formData.title || !formData.description || !formData.youtubeUrl || !formData.type) {
+    toast.error('Please fill in all fields');
+    return;
+  }
 
-    try {
-      if (editingId) {
-        await updateDoc(doc(db, 'videos', editingId), formData);
-        toast.success('Video updated successfully');
-      } else {
-        await addDoc(collection(db, 'videos'), formData);
-        toast.success('Video added successfully');
-      }
-      setFormData({ title: '', description: '', youtubeUrl: '', type: '' });
-      setEditingId(null);
-      setOpen(false);
-      fetchVideos();
-    } catch (error) {
-      console.error('Error saving video:', error);
-      toast.error('Error saving video');
+  try {
+    if (editingId) {
+      // When updating, we only want to set the 'updatedAt' timestamp
+      // and update the fields from formData.
+      await updateDoc(doc(db, 'videos', editingId), {
+        ...formData, // Spread existing form data
+        updatedAt: serverTimestamp(), // Set or update the updatedAt timestamp
+      });
+      toast.success('Video updated successfully');
+    } else {
+      // When adding a new document, set both 'createdAt' and 'updatedAt'
+      await addDoc(collection(db, 'videos'), {
+        ...formData, // Spread existing form data
+        createdAt: serverTimestamp(), // Set the creation timestamp
+        updatedAt: serverTimestamp(), // Set the initial update timestamp
+      });
+      toast.success('Video added successfully');
     }
-  };
-
+    setFormData({ title: '', description: '', youtubeUrl: '', type: '', date: '' }); // Reset form
+    setEditingId(null);
+    setOpen(false);
+    fetchVideos(); // Re-fetch videos to show the updated/new data
+  } catch (error) {
+    console.error('Error saving video:', error);
+    toast.error('Error saving video');
+  }
+};
   const handleDeleteClick = (id: string) => {
     setDeleteVideoId(id);
     setDeleteDialogOpen(true);
@@ -144,13 +163,14 @@ export default function VideoDashboard() {
       description: video.description,
       youtubeUrl: video.youtubeUrl,
       type: video.type,
+      date: video.date,
     });
     setOpen(true);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      setFormData({ title: '', description: '', youtubeUrl: '', type: '' });
+      setFormData({ title: '', description: '', youtubeUrl: '', type: '' ,date: Date.now().toString()});
       setEditingId(null);
     }
     setOpen(newOpen);
@@ -301,6 +321,7 @@ export default function VideoDashboard() {
                   <TableHead className="text-foreground">Type</TableHead>
                   <TableHead className="text-foreground">Description</TableHead>
                   <TableHead className="text-foreground">YouTube URL</TableHead>
+                  <TableHead className="text-foreground">Date</TableHead>
                   <TableHead className="text-foreground text-right">
                     Actions
                   </TableHead>
@@ -341,6 +362,9 @@ export default function VideoDashboard() {
                           <Eye size={20} /> View on YouTube
                         </p>
                       </a>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground max-w-xs truncate">
+                      {new Date(parseInt(video.date)).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
