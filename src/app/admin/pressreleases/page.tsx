@@ -41,7 +41,7 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, Edit2, Plus, Eye, ArrowUpDown ,Loader2 } from 'lucide-react';
+import { Trash2, Edit2, Plus, Download, ArrowUpDown ,BookOpenText, Loader2 } from 'lucide-react';
 import { toast } from '@/utils/toast';
 import { Pagination } from '@/components/Pagination';
 
@@ -49,7 +49,7 @@ interface Video {
   id: string;
   title: string;
   description: string;
-  youtubeUrl: string;
+  documentsUrl: string;
   type: string;
   date:string
 }
@@ -67,18 +67,17 @@ export default function VideoDashboard() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    youtubeUrl: '',
+    documentsUrl: '',
     type: '',
     date: Date.now().toString(),
   });
-  const [submitting, setSubmitting] = useState(false);
-
+const [submitting, setSubmitting] = useState(false);
  
 
 const fetchVideos = async () => {
   setLoading(true);
   try {
-    const videosQuery = query(collection(db, 'videos'), orderBy('updatedAt', sortOrder));
+    const videosQuery = query(collection(db, 'press_releases'), orderBy('updatedAt', sortOrder));
     const querySnapshot = await getDocs(videosQuery);
     const videoList = querySnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -87,8 +86,8 @@ const fetchVideos = async () => {
     setVideos(videoList);
     setCurrentPage(1); // Reset to first page when sorting changes
   } catch (error) {
-    console.error('Error fetching videos:', error);
-    toast.error('Failed to load videos');
+    console.error('Error fetching press releases:', error);
+    toast.error('Failed to load press releases');
   }
   setLoading(false);
 };
@@ -108,76 +107,75 @@ useEffect(() => {
   };
 
   const handleAddOrUpdate = async () => {
-  // Validation checks
-  if (!formData.title || !formData.description || !formData.youtubeUrl || !formData.type) {
+  if (!formData.title || !formData.description || !formData.documentsUrl || !formData.type) {
     toast.error('Please fill in all fields');
     return;
   }
 
-  if (formData.title.trim().length === 0) {
-    toast.error('Title cannot be empty');
-    return;
-  }
+      if (formData.title.trim().length === 0) {
+        toast.error('Title cannot be empty');
+        return;
+      }
+    
+      if (formData.description.length < 10) {
+        toast.error('Description must be at least 10 characters');
+        return;
+      }
+    
+      if (formData.description.length > 200) {
+        toast.error('Description cannot exceed 200 characters');
+        return;
+      }
+    
+      if (formData.type.trim().length === 0) {
+        toast.error('Type cannot be empty');
+        return;
+      }
+    
+      if (formData.documentsUrl.trim().length === 0) {
+        toast.error('Documents URL cannot be empty');
+        return;
+      }
 
-  if (formData.description.length < 10) {
-    toast.error('Description must be at least 10 characters');
+        const youtubeRegex = /^(https?:\/\/)?(docs\.google\.com\/(document|spreadsheets|presentation)\/d\/[a-zA-Z0-9_-]+\/export\?format=pdf|drive\.google\.com\/(file\/d\/[a-zA-Z0-9_-]+\/(view|preview)|uc\?export=download&id=[a-zA-Z0-9_-]+)).*$/;
+  if (!youtubeRegex.test(formData.documentsUrl)) {
+    toast.error('Please enter a valid documents URL');
     return;
   }
-
-  if (formData.description.length > 200) {
-    toast.error('Description cannot exceed 200 characters');
-    return;
-  }
-
-  if (formData.type.trim().length === 0) {
-    toast.error('Type cannot be empty');
-    return;
-  }
-
-  if (formData.youtubeUrl.trim().length === 0) {
-    toast.error('YouTube URL cannot be empty');
-    return;
-  }
-
-  // Validate YouTube URL format
-  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\//;
-  if (!youtubeRegex.test(formData.youtubeUrl)) {
-    toast.error('Please enter a valid YouTube URL');
-    return;
-  }
+  
 
   try {
-      setSubmitting(true);
+    setSubmitting(true);
     if (editingId) {
       
       // When updating, we only want to set the 'updatedAt' timestamp
       // and update the fields from formData.
-      await updateDoc(doc(db, 'videos', editingId), {
+      await updateDoc(doc(db, 'press_releases', editingId), {
         ...formData, // Spread existing form data
         updatedAt: serverTimestamp(), // Set or update the updatedAt timestamp
       });
-      toast.success('Video updated successfully');
+      toast.success('Press Release updated successfully');
     } else {
-      // When adding a new document, set both 'createdAt' and 'updatedAt'
-      await addDoc(collection(db, 'videos'), {
+      
+    
+    
+      await addDoc(collection(db, 'press_releases'), {
         ...formData, // Spread existing form data
         createdAt: serverTimestamp(), // Set the creation timestamp
         updatedAt: serverTimestamp(), // Set the initial update timestamp
       });
-      toast.success('Video added successfully');
+      toast.success('Press Release added successfully');
     }
-    setFormData({ title: '', description: '', youtubeUrl: '', type: '', date: '' }); // Reset form
+    setFormData({ title: '', description: '', documentsUrl: '', type: '', date: '' }); // Reset form
     setEditingId(null);
     setOpen(false);
     fetchVideos(); // Re-fetch videos to show the updated/new data
   } catch (error) {
-    console.error('Error saving video:', error);
-    toast.error('Error saving video');
-  }finally{
-   
+    console.error('Error saving press release:', error);
+    toast.error('Error saving press release');
+    } finally {
         setSubmitting(false);
 
-  
   }
 };
   const handleDeleteClick = (id: string) => {
@@ -189,14 +187,14 @@ useEffect(() => {
     if (!deleteVideoId) return;
 
     try {
-      await deleteDoc(doc(db, 'videos', deleteVideoId));
-      toast.success('Video deleted successfully');
+      await deleteDoc(doc(db, 'press_releases', deleteVideoId));
+      toast.success('Press Release deleted successfully');
       setDeleteDialogOpen(false);
       setDeleteVideoId(null);
       fetchVideos();
     } catch (error) {
-      console.error('Error deleting video:', error);
-      toast.error('Error deleting video');
+      console.error('Error deleting press release:', error);
+      toast.error('Error deleting press release');
     }
   };
 
@@ -205,7 +203,7 @@ useEffect(() => {
     setFormData({
       title: video.title,
       description: video.description,
-      youtubeUrl: video.youtubeUrl,
+      documentsUrl: video.documentsUrl,
       type: video.type,
       date: video.date,
     });
@@ -214,24 +212,12 @@ useEffect(() => {
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      setFormData({ title: '', description: '', youtubeUrl: '', type: '', date: '' });
+      setFormData({ title: '', description: '', documentsUrl: '', type: '', date: '' });
       setEditingId(null);
     }
     setOpen(newOpen);
   };
 
-  const extractYoutubeId = (url: string) => {
-    const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/;
-    const match = url.match(regex);
-    return match ? match[1] : null;
-  };
-
-  const getYoutubeThumbnail = (youtubeUrl: string) => {
-    const youtubeId = extractYoutubeId(youtubeUrl);
-    return youtubeId
-      ? `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
-      : null;
-  };
 
   // Pagination logic
   const totalPages = Math.ceil(videos.length / itemsPerPage);
@@ -247,7 +233,7 @@ useEffect(() => {
             <h1 className="text-xl font-bold text-foreground mb-2">
               Video Management
             </h1>
-            <p className="text-muted-foreground">Manage your video content</p>
+            <p className="text-muted-foreground">Manage your Press Releases content</p>
           </div>
 
           <div className="flex gap-2 items-center">
@@ -265,16 +251,16 @@ useEffect(() => {
               <DialogTrigger asChild>
                 <Button className="gap-2">
                   <Plus size={20} />
-                  Add Video
+                  Add new Press Release
                 </Button>
               </DialogTrigger>
               <DialogContent className="bg-background">
               <DialogHeader>
                 <DialogTitle>
-                  {editingId ? 'Edit Video' : 'Add New Video'}
+                  {editingId ? 'Edit Press Release' : 'Add New Press Release'}
                 </DialogTitle>
                 <DialogDescription>
-                  Fill in the video details below
+                  Fill in the Press Release details below
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -286,11 +272,12 @@ useEffect(() => {
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
-                    placeholder="Enter video title"
+                    placeholder="Enter Press Release title"
                     className="bg-muted text-foreground border-input"
                   />
                 </div>
-                <div>
+              
+                <div className=' relative'>
                   <div className="flex justify-between items-center mb-2">
                     <label className="text-foreground text-sm font-medium">
                       Description
@@ -311,8 +298,8 @@ useEffect(() => {
                         handleInputChange(e);
                       }
                     }}
-                    placeholder="Enter video description (min 10 chars, max 200 chars)"
-                    className={`bg-muted text-foreground border-input ${
+                    placeholder="Enter press Relese description (min 10 chars, max 200 chars)"
+                    className={`bg-muted resize-none   text-foreground border-input ${
                       formData.description.length > 200 ? 'border-red-500' :
                       formData.description.length < 10 && formData.description.length > 0 ? 'border-yellow-500' :
                       'border-input'
@@ -334,40 +321,27 @@ useEffect(() => {
                     name="type"
                     value={formData.type}
                     onChange={handleInputChange}
-                    placeholder="Enter video type"
+                    placeholder="Enter Press Release type"
                     className="bg-muted text-foreground border-input"
                   />
                 </div>
                 <div>
                   <label className="text-foreground text-sm font-medium mb-1 block">
-                    YouTube URL
+                    Documents Url
                   </label>
                   <Input
-                    name="youtubeUrl"
-                    value={formData.youtubeUrl}
+                    name="documentsUrl"
+                    value={formData.documentsUrl}
                     onChange={handleInputChange}
-                    placeholder="https://youtube.com/watch?v=..."
+                    placeholder="https://example.com/document.pdf"
                     className="bg-muted text-foreground border-input"
                   />
                 </div>
-                {editingId && (
-                  <div>
-                    <div>
-                      {getYoutubeThumbnail(formData.youtubeUrl) && (
-                        <img
-                          src={getYoutubeThumbnail(formData.youtubeUrl)!}
-                          alt={formData.title}
-                          className="w-30 h-30 object-cover rounded"
-                        />
-                      )}
-                    </div>
-
-                  </div>
-                )}
+             
                 <div className="flex gap-2 pt-4">
-<Button onClick={handleAddOrUpdate} className="flex-1" disabled={submitting}>
-                    {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}                    
-                    {editingId ? 'Update' : 'Add'} Video
+                   <Button onClick={handleAddOrUpdate} className="flex-1" disabled={submitting}>
+                    {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {editingId ? 'Update' : 'Add'}  Press Release
                   </Button>
                   <Button
                     variant="outline"
@@ -385,9 +359,9 @@ useEffect(() => {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Video</AlertDialogTitle>
+              <AlertDialogTitle>Delete Press Release</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this video? This action cannot be undone.
+                Are you sure you want to delete this press release? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="flex gap-2">
@@ -406,22 +380,22 @@ useEffect(() => {
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <p className="text-muted-foreground">Loading videos...</p>
+            <p className="text-muted-foreground">Loading press releases...</p>
           </div>
         ) : videos.length === 0 ? (
           <div className="flex justify-center items-center py-12">
-            <p className="text-muted-foreground">No videos yet. Add one to get started!</p>
+            <p className="text-muted-foreground">No press releases yet. Add one to get started!</p>
           </div>
         ) : (
           <div className=" overflow-hidden bg-card">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted hover:bg-muted">
-                  <TableHead className="text-foreground">Thumbnail</TableHead>
                   <TableHead className="text-foreground">Title</TableHead>
                   <TableHead className="text-foreground">Type</TableHead>
                   <TableHead className="text-foreground">Description</TableHead>
-                  <TableHead className="text-foreground">YouTube URL</TableHead>
+                  <TableHead className="text-foreground">Download Documents</TableHead>
+                    <TableHead className="text-foreground">Read Documents</TableHead>
                   <TableHead className="text-foreground">Date</TableHead>
                   <TableHead className="text-foreground text-right">
                     Actions
@@ -434,15 +408,7 @@ useEffect(() => {
                     key={video.id}
                     className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <TableCell>
-                      {getYoutubeThumbnail(video.youtubeUrl) && (
-                        <img
-                          src={getYoutubeThumbnail(video.youtubeUrl)!}
-                          alt={video.title}
-                          className="w-16 h-12 object-cover rounded"
-                        />
-                      )}
-                    </TableCell>
+                  
                     <TableCell className="font-medium text-foreground max-w-xs truncate">
                       {video.title}
                     </TableCell>
@@ -454,15 +420,29 @@ useEffect(() => {
                     </TableCell>
                     <TableCell className="text-muted-foreground max-w-xs truncate">
                       <a
-                        href={video.youtubeUrl}
-                        target="_blank"
+                        href={video.documentsUrl}
+                        download={true}
+ target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-500 hover:underline"
                       >
                         <p className="flex gap-3">
-                          <Eye size={20} /> View on YouTube
+                          <Download size={20} /> Download  PDF Now
                         </p>
                       </a>
+                    </TableCell>
+                     <TableCell className="text-muted-foreground max-w-xs truncate">
+                    <a
+                        href={video.documentsUrl}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                    >
+                        <p className="flex gap-3">
+                            <BookOpenText size={20} /> Read PDF
+                        </p>
+                    </a>
                     </TableCell>
                     <TableCell className="text-muted-foreground max-w-xs truncate">
                       {new Date(parseInt(video.date)).toLocaleDateString()}

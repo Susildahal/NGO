@@ -8,7 +8,7 @@ import {
   User,
   LogOut,
   Settings,
-  Home,
+  BookOpenText,
   BarChart3,
   Users,
   FileText,
@@ -141,7 +141,8 @@ export default function adminLayout({ children }: adminLayoutProps) {
     { href: '/admin/accounts', label: 'Account Management', icon: UserPlus },
     { href: '/admin/stats', label: 'Stats and Analytics ', icon: BarChart3 },
     { href: '/admin/events', label: 'Events', icon: Calendar, badge: '3' },
-    { href: '/admin/video', label: 'video', icon: Video },
+    { href: '/admin/video', label: 'Video', icon: Video },
+    { href: '/admin/pressreleases', label: 'Press Releases', icon: BookOpenText },
     { href: '/admin/history', label: 'History', icon: Clock },
     { href: '/admin/missionandvision', label: 'Mission & Vision', icon: Telescope },
   ];
