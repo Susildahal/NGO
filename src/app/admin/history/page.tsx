@@ -160,7 +160,7 @@ const DynamicForm = () => {
   return (
     <div className="min-h-screen dark:bg-gray-900 bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
-        <Card className="shadow-2xl ">
+        <Card className=" ">
           <CardHeader className="">
             <div className="flex items-center justify-between">
               <div>
@@ -186,7 +186,7 @@ const DynamicForm = () => {
                       placeholder="e.g., 2,500+"
                       value={formData.livesTransformed}
                       onChange={(e) => setFormData(prev => ({ ...prev, livesTransformed: e.target.value }))}
-                      className="mt-2  border-slate-700 text-white placeholder:text-slate-600"
+                      className="mt-2  border-slate-700  "
                     />
                   </div>
 
@@ -196,7 +196,7 @@ const DynamicForm = () => {
                       placeholder="e.g., 35"
                       value={formData.communitiesServed}
                       onChange={(e) => setFormData(prev => ({ ...prev, communitiesServed: e.target.value }))}
-                      className="mt-2  border-slate-700 text-white placeholder:text-slate-600"
+                      className="mt-2  border-slate-700  "
                     />
                   </div>
 
@@ -206,7 +206,7 @@ const DynamicForm = () => {
                       placeholder="e.g., 75+"
                       value={formData.programsCompleted}
                       onChange={(e) => setFormData(prev => ({ ...prev, programsCompleted: e.target.value }))}
-                      className="mt-2  border-slate-700 text-white placeholder:text-slate-600"
+                      className="mt-2  border-slate-700  "
                     />
                   </div>
 
@@ -216,7 +216,7 @@ const DynamicForm = () => {
                       placeholder="e.g., 4"
                       value={formData.yearsOfImpact}
                       onChange={(e) => setFormData(prev => ({ ...prev, yearsOfImpact: e.target.value }))}
-                      className="mt-2  border-slate-700 text-white placeholder:text-slate-600"
+                      className="mt-2  border-slate-700  "
                     />
                   </div>
                 </div>
@@ -231,10 +231,10 @@ const DynamicForm = () => {
                     onClick={addJourney}
                     variant="outline"
                     size="sm"
-                    className="flex items-center gap-2 border-slate-700 text-slate-200 hover:bg-slate-700"
+                    className="flex items-center gap-2  border-slate-700 text-slate-200"
                   >
                     <PlusCircle className="w-4 h-4" />
-                    Add Journey Entry
+                   <p className=' text-black dark: '> Add Journey Entry </p> 
                   </Button>
                 </div>
                 
@@ -263,7 +263,7 @@ const DynamicForm = () => {
                             placeholder="e.g., 2021"
                             value={journey.year}
                             onChange={(e) => updateJourney(journeyIndex, 'year', e.target.value)}
-                            className="mt-1  border-slate-700 text-white placeholder:text-slate-600"
+                            className="mt-1  border-slate-700  "
                           />
                         </div>
                         <div>
@@ -272,7 +272,7 @@ const DynamicForm = () => {
                             placeholder="e.g., The Beginning"
                             value={journey.title}
                             onChange={(e) => updateJourney(journeyIndex, 'title', e.target.value)}
-                            className="mt-1  border-slate-700 text-white placeholder:text-slate-600"
+                            className="mt-1  border-slate-700  "
                           />
                         </div>
                       </div>
@@ -283,7 +283,7 @@ const DynamicForm = () => {
                           placeholder="Describe this part of your journey..."
                           value={journey.description}
                           onChange={(e) => updateJourney(journeyIndex, 'description', e.target.value)}
-                          className="mt-1 admin border-slate-700 text-white placeholder:text-slate-600 min-h-24 resize-none"
+                          className="mt-1 admin border-slate-700   min-h-24 resize-none"
                         />
                       </div>
 
@@ -309,7 +309,7 @@ const DynamicForm = () => {
                                 placeholder={`Achievement ${achievementIndex + 1}`}
                                 value={achievement}
                                 onChange={(e) => updateAchievement(journeyIndex, achievementIndex, e.target.value)}
-                                className="admin border-slate-700 text-white placeholder:text-slate-600"
+                                className="admin border-slate-700  "
                               />
                               {journey.keyAchievements.length > 1 && (
                                 <Button
@@ -338,7 +338,7 @@ const DynamicForm = () => {
                   placeholder="Tell your foundation story (200-1000 characters)..."
                   value={formData.foundationStory}
                   onChange={(e) => setFormData(prev => ({ ...prev, foundationStory: e.target.value }))}
-                  className="min-h-40 resize-none border-slate-700 text-black dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                  className="min-h-40 resize-none border-slate-700 text-black dark: placeholder:text-slate-400 dark:"
                 />
                 
                 {/* Character Counter */}
@@ -406,7 +406,7 @@ const DynamicForm = () => {
               <Button 
                 onClick={handleSubmit} 
                 disabled={isSubmitting || !isStoryValid}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6 text-lg"
+                className="w-full  font-semibold py-6 text-lg"
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Form'}
               </Button>

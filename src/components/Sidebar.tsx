@@ -23,9 +23,7 @@ import {
   Sun,
   PanelLeft,
   Telescope,
-
-  Database,
-  MessageSquare,
+Video,
   Clock,
  
 } from 'lucide-react';
@@ -143,7 +141,7 @@ export default function adminLayout({ children }: adminLayoutProps) {
     { href: '/admin/accounts', label: 'Account Management', icon: UserPlus },
     { href: '/admin/stats', label: 'Stats and Analytics ', icon: BarChart3 },
     { href: '/admin/events', label: 'Events', icon: Calendar, badge: '3' },
-    { href: '/admin/messages', label: 'Messages', icon: MessageSquare, badge: '12' },
+    { href: '/admin/video', label: 'video', icon: Video },
     { href: '/admin/history', label: 'History', icon: Clock },
     { href: '/admin/missionandvision', label: 'Mission & Vision', icon: Telescope },
   ];
