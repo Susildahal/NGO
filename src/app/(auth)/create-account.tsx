@@ -302,7 +302,7 @@ export default function CreateAccountPage() {
           {/* Mobile Footer */}
           <div className="md:hidden mt-8 text-center">
             <p className="text-sm text-gray-500">
-              © 2025 NGO Connect. All rights reserved.
+              © 2025 NGO Connect. All rights reservedss.
             </p>
           </div>
         </div>

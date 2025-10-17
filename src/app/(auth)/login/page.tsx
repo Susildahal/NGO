@@ -81,7 +81,7 @@ export default function NGOLoginPortal() {
       console.log("User signed in:", user);
       
       // Redirect to dashboard
-      router.push('/dashboard');
+      router.push('/admin');
     } catch (error: any) {
       // Handle Firebase auth errors
       console.error("Auth error:", error);
