@@ -148,8 +148,7 @@ useEffect(() => {
     setSubmitting(true);
     if (editingId) {
       
-      // When updating, we only want to set the 'updatedAt' timestamp
-      // and update the fields from formData.
+
       await updateDoc(doc(db, 'press_releases', editingId), {
         ...formData, // Spread existing form data
         updatedAt: serverTimestamp(), // Set or update the updatedAt timestamp
@@ -227,7 +226,7 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen ">
-      <div className="max-w-6xl mx-auto">
+      <div className=" mx-auto">
         <div className="flex justify-between items-center mb-5">
           <div>
             <h1 className="text-xl font-bold text-foreground mb-2">

@@ -241,7 +241,7 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen ">
-      <div className="max-w-6xl mx-auto">
+      <div className=" mx-auto">
         <div className="flex justify-between items-center mb-5">
           <div>
             <h1 className="text-xl font-bold text-foreground mb-2">

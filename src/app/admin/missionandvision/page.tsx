@@ -193,8 +193,8 @@ export default function MissionVisionApproach() {
   };
 
   return (
-    <div className="min-h-screen dark:bg-gray-900 bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen dark:bg-gray-900 bg-gray-50 ">
+    <div className=" mx-auto">
       <Card>
         <CardHeader>
         <CardTitle>Mission, Vision & Core Values</CardTitle>

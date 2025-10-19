@@ -36,6 +36,7 @@ export default function SiteSettings() {
         const docSnap = await getDoc(docRef);
         console.log('Fetched settings:', docSnap.data());
 
+
         if (docSnap.exists()) {
           const data = docSnap.data();
           const socialArray = data.socialMedia
@@ -138,12 +139,7 @@ export default function SiteSettings() {
     }
   };
 
-  const handleReset = () => {
-    setFormData(defaultForm);
-    setIsEditing(false);
-    setSuccess(false);
-    setError('');
-  };
+
 
   return (
     <div className="min-h-screen dark:bg-gray-900 bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
