@@ -120,3 +120,49 @@
     @apply bg-background text-foreground;
   }
 }
+/* globals.css */
+/* Custom scrollbar styles using explicit CSS so they work in pseudo selectors */
+:root {
+  --scroll-thumb: #6b7280; /* gray-500 */
+  --scroll-track: #f3f4f6; /* gray-100 */
+}
+
+.dark {
+  --scroll-thumb: #9ca3af; /* gray-400 */
+  --scroll-track: #111827; /* gray-900 */
+}
+
+.custom-scrollbar {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+  scrollbar-gutter: stable; /* Firefox */
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: var(--scroll-track);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent; /* gives a bit of padding feel */
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  border: none;
+  background-clip: border-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  filter: brightness(0.8);
+}
+
+

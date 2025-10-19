@@ -227,7 +227,8 @@ useEffect(() => {
   return (
     <div className="min-h-screen ">
       <div className=" mx-auto">
-        <div className="flex justify-between items-center mb-5">
+        <div className="flex justify-between items-center flex-wrap mb-5">
+          
           <div>
             <h1 className="text-xl font-bold text-foreground mb-2">
               Video Management

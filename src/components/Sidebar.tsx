@@ -320,11 +320,11 @@ export default function adminLayout({ children }: adminLayoutProps) {
             <Link
               href={item.href}
               className={`group flex items-center w-full rounded-lg transition-all duration-300 hover:scale-[1.01] ${paddingLeft} ${
-                sidebarCollapsed ? 'p-3 justify-center' : 'p-2.5'
+                sidebarCollapsed ? 'px-0.5 py-1 justify-center ' : 'p-2.5'
               } ${
                 isActive
-                  ? 'text-sidebar-accent-foreground bg-sidebar-primary/20 font-medium '
-                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground'
+                  ? 'text-sidebar-accent-foreground   bg-sidebar-primary/20 font-medium '
+                  : 'text-sidebar-foreground/70  hover:bg-sidebar-accent/40 hover:text-sidebar-foreground'
               }`}
               title={sidebarCollapsed ? item.label : undefined}
             >
@@ -488,7 +488,7 @@ export default function adminLayout({ children }: adminLayoutProps) {
 
           {/* Sidebar Navigation */}
           <motion.nav
-            className="flex-1 px-3 pb-4 overflow-y-auto scrollbar-thin scrollbar-thumb-sidebar-accent scrollbar-track-transparent"
+            className="flex-1 px-3 pb-4 overflow-y-auto custom-scrollbar"
             animate={{
               opacity: sidebarOpen || !window.innerWidth || window.innerWidth >= 1024 ? 1 : 0.8,
             }}
