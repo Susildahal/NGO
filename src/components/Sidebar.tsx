@@ -224,7 +224,7 @@ export default function adminLayout({ children }: adminLayoutProps) {
     { href: '/admin/missionandvision', label: 'Mission & Vision', icon: Telescope },
     { href: '/admin/payment', label: 'payment', icon: Telescope },
   ];
-  ];
+  
 
   const settingsItems: NavigationItem[] = [
     { href: '/admin/profile', label: 'Profile', icon: User },
