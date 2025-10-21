@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Upload, X, Check, Loader2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import Spinner from '@/components/spinner';
+import * as Yup from 'yup'
 
 // Types
 interface BankDetails {
@@ -622,7 +621,7 @@ const BankCRUDApp = () => {
       </AnimatePresence>
     
     </div>
-    <Spinner  />
+  
    </>
   );
 };
