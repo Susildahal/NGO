@@ -222,6 +222,8 @@ export default function adminLayout({ children }: adminLayoutProps) {
     { href: '/admin/pressreleases', label: 'Press Releases', icon: BookOpenText },
     { href: '/admin/history', label: 'History', icon: Clock },
     { href: '/admin/missionandvision', label: 'Mission & Vision', icon: Telescope },
+    { href: '/admin/payment', label: 'payment', icon: Telescope },
+  ];
   ];
 
   const settingsItems: NavigationItem[] = [
