@@ -142,7 +142,7 @@ export default function SiteSettings() {
 
 
   return (
-    <div className="min-h-screen dark:bg-gray-900 bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className=" dark:bg-gray-900 bg-gray-50 ">
       <div className="max-w-5xl mx-auto">
         <Card>
           <CardHeader>

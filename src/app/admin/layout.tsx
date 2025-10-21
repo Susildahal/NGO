@@ -1,20 +1,12 @@
 
 import DashboardLayout from "@/components/Sidebar";
 
-
-
-
-export default function RootLayout({
+export default function AdminLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body   
-      >
-      <DashboardLayout>{children}</DashboardLayout>
-      </body>
-    </html>
+    <DashboardLayout>{children}</DashboardLayout>
   );
 }

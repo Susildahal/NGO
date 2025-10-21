@@ -27,9 +27,10 @@ import {
   Video,
   Clock,
   Home,
-  GitBranch,
-  Zap,
+ 
   Laptop,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -427,8 +428,8 @@ export default function adminLayout({ children }: adminLayoutProps) {
                   <Heart className="h-5 w-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <h1 className="text-base font-bold text-sidebar-foreground">Admin Portal</h1>
-                  <p className="text-xs text-sidebar-foreground/70 font-medium">Manage Operations</p>
+                  <h1 className="text-base font-bold text-sidebar-foreground">Deep Nepal </h1>
+                  <p className="text-xs text-sidebar-foreground/70 font-medium">Admin Portal</p>
                 </div>
               </div>
             ) : (
@@ -450,7 +451,7 @@ export default function adminLayout({ children }: adminLayoutProps) {
 
           {/* Search Bar */}
           {!sidebarCollapsed && (
-            <div className="p-4">
+            <div className="p-4" onClick={(e) => e.stopPropagation()}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
@@ -463,11 +464,15 @@ export default function adminLayout({ children }: adminLayoutProps) {
                       setSearchQuery('');
                     }
                   }}
+                  onClick={(e) => e.stopPropagation()}
                   className="w-full pl-10 pr-9 py-2.5 bg-accent/50 border border-border rounded-xl focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200 text-sm text-foreground placeholder-muted-foreground"
                 />
                 {searchQuery && (
                   <button
-                    onClick={() => setSearchQuery('')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSearchQuery('');
+                    }}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-accent"
                   >
                     <X className="h-3 w-3 text-muted-foreground" />
@@ -489,6 +494,7 @@ export default function adminLayout({ children }: adminLayoutProps) {
           {/* Sidebar Navigation */}
           <motion.nav
             className="flex-1 px-3 pb-4 overflow-y-auto custom-scrollbar"
+            onClick={(e) => e.stopPropagation()}
             animate={{
               opacity: sidebarOpen || !window.innerWidth || window.innerWidth >= 1024 ? 1 : 0.8,
             }}
@@ -623,7 +629,15 @@ export default function adminLayout({ children }: adminLayoutProps) {
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                   title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
-                  <PanelLeft className="h-4 w-4" />
+                  
+                  {
+                    sidebarCollapsed ? (
+                      <ChevronRight className="h-7 w-7" />
+                    ) : (
+                      <ChevronLeft className="h-7 w-7" />
+                    )
+                  }
+                  {/* <PanelLeft className="h-4 w-4" /> */}
                 </button>
 
                 <div>

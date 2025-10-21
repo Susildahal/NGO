@@ -126,19 +126,7 @@ export default function MissionVisionApproach() {
     setSuccess(false);
   };
 
-  const addStat = () => {
-    setFormData(prev => ({
-      ...prev,
-      stats: [...prev.stats, { value: '', label: '' }]
-    }));
-  };
-
-  const removeStat = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      stats: prev.stats.filter((_, i) => i !== index)
-    }));
-  };
+ 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

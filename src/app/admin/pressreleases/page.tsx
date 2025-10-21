@@ -44,6 +44,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Trash2, Edit2, Plus, Download, ArrowUpDown ,BookOpenText, Loader2 } from 'lucide-react';
 import { toast } from '@/utils/toast';
 import { Pagination } from '@/components/Pagination';
+import Spinners from '@/components/spinner';
 
 interface Video {
   id: string;
@@ -380,7 +381,7 @@ useEffect(() => {
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <p className="text-muted-foreground">Loading press releases...</p>
+            <p className="text-muted-foreground"><Spinners /></p>
           </div>
         ) : videos.length === 0 ? (
           <div className="flex justify-center items-center py-12">
