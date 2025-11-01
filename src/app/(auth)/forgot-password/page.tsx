@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
           <div className="bg-blue-600 p-2 rounded-xl">
             <Heart className="h-6 w-6 text-white" />
           </div>
-          <span className="ml-3 text-xl font-bold text-blue-600">NGO Connect</span>
+          <span className="ml-3 text-xl font-bold text-blue-600">Deep Nepal</span>
         </div>
         
         <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
@@ -139,7 +139,7 @@ export default function ForgotPasswordPage() {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500">
-            © 2025 NGO Connect. All rights reserved.
+            © 2025 Deep Nepal. All rights reserved.
           </p>
         </div>
       </div>

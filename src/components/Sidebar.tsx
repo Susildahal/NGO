@@ -22,11 +22,11 @@ import {
   Search,
   Moon,
   Sun,
-  PanelLeft,
   Telescope,
   Video,
   Clock,
   Home,
+  
  
   Laptop,
   ChevronLeft,
@@ -34,7 +34,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -222,6 +221,9 @@ export default function adminLayout({ children }: adminLayoutProps) {
     { href: '/admin/pressreleases', label: 'Press Releases', icon: BookOpenText },
     { href: '/admin/history', label: 'History', icon: Clock },
     { href: '/admin/missionandvision', label: 'Mission & Vision', icon: Telescope },
+      { href: '/admin/payment', label: 'Payment', icon: Telescope },
+       { href: '/admin/carousel', label: 'Carousel', icon: Telescope },
+
   ];
 
   const settingsItems: NavigationItem[] = [
@@ -266,9 +268,7 @@ export default function adminLayout({ children }: adminLayoutProps) {
     const isExpanded = expandedItems.includes(item.href);
     const paddingLeft = level === 0 ? (sidebarCollapsed ? 'pl-0' : 'pl-2') : 'pl-8';
     
-    const activeClass = isActive
-      ? 'text-primary bg-primary/10 dark:bg-primary/20 font-medium  shadow-sm'
-      : 'text-foreground/70 hover:bg-accent/40 hover:text-foreground hover:shadow-sm';
+ 
 
     return (
       <motion.li
@@ -632,9 +632,9 @@ export default function adminLayout({ children }: adminLayoutProps) {
                   
                   {
                     sidebarCollapsed ? (
-                      <ChevronRight className="h-7 w-7" />
+                      <ChevronRight className="h-5 w-5" />
                     ) : (
-                      <ChevronLeft className="h-7 w-7" />
+                      <ChevronLeft className="h-5 w-5" />
                     )
                   }
                   {/* <PanelLeft className="h-4 w-4" /> */}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 import { Toaster } from "@/utils/toast";
+import { ReduxProvider } from "@/store/ReduxProvider";
 
 
 
@@ -20,8 +21,10 @@ export default function RootLayout({
       <body
         // className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Toaster />
-        {children}
+        <ReduxProvider>
+          <Toaster />
+          {children}
+        </ReduxProvider>
       </body>
     </html>
   );

@@ -4,7 +4,7 @@ import { Plus, Pencil, Trash2, Upload, X, Check, Loader2, AlertCircle } from 'lu
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import Spinner from '@/components/spinner';
+
 
 // Types
 interface BankDetails {
@@ -622,7 +622,7 @@ const BankCRUDApp = () => {
       </AnimatePresence>
     
     </div>
-    <Spinner  />
+
    </>
   );
 };

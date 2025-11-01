@@ -1,52 +1,131 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useFormik } from 'formik';
+import { z } from 'zod';
+import { toFormikValidationSchema } from 'zod-formik-adapter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { PlusCircle, Trash2, CheckCircle, AlertCircle, Moon } from 'lucide-react';
+import { PlusCircle, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
+import { db } from '@/utils/firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import toast from 'react-hot-toast';
 
-interface Journey {
-  year: string;
-  title: string;
-  description: string;
-  keyAchievements: string[];
-}
+// Zod validation schema
+const historySchema = z.object({
+  livesTransformed: z.string().min(1, 'Lives transformed is required'),
+  communitiesServed: z.string().min(1, 'Communities served is required'),
+  programsCompleted: z.string().min(1, 'Programs completed is required'),
+  yearsOfImpact: z.string().min(1, 'Years of impact is required'),
+  journeys: z.array(
+    z.object({
+      year: z.string().min(1, 'Year is required'),
+      title: z.string().min(1, 'Title is required'),
+      description: z.string().min(1, 'Description is required'),
+      keyAchievements: z.array(z.string()).min(1, 'At least one achievement is required'),
+    })
+  ).min(1, 'At least one journey entry is required'),
+  foundationStory: z.string()
+    .min(200, 'Foundation story must be at least 200 characters')
+    .max(1000, 'Foundation story must not exceed 1000 characters'),
+});
 
-interface FormData {
-  livesTransformed: string;
-  communitiesServed: string;
-  programsCompleted: string;
-  yearsOfImpact: string;
-  journeys: Journey[];
-  foundationStory: string;
-}
+type HistoryFormData = z.infer<typeof historySchema>;
 
 const DynamicForm = () => {
-  const [formData, setFormData] = useState<FormData>({
-    livesTransformed: '',
-    communitiesServed: '',
-    programsCompleted: '',
-    yearsOfImpact: '',
-    journeys: [{
-      year: '',
-      title: '',
-      description: '',
-      keyAchievements: ['']
-    }],
-    foundationStory: ''
-  });
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
-  const [submittedData, setSubmittedData] = useState<FormData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetchingData, setFetchingData] = useState(true);
 
-  const storyLength = formData.foundationStory.length;
-  const isStoryValid = storyLength >= 200 && storyLength <= 1000;
-  
-  const getCharCountColor = () => {
+  // Initialize Formik with Zod validation
+  const formik = useFormik<HistoryFormData>({
+    initialValues: {
+      livesTransformed: '',
+      communitiesServed: '',
+      programsCompleted: '',
+      yearsOfImpact: '',
+      journeys: [{
+        year: '',
+        title: '',
+        description: '',
+        keyAchievements: ['']
+      }],
+      foundationStory: ''
+    },
+    validationSchema: toFormikValidationSchema(historySchema),
+    validateOnChange: true,
+    validateOnBlur: true,
+    onSubmit: async (values) => {
+      setLoading(true);
+      try {
+        // Filter out empty achievements
+        const cleanedJourneys = values.journeys.map((journey: {year: string; title: string; description: string; keyAchievements: string[]}) => ({
+          ...journey,
+          keyAchievements: journey.keyAchievements.filter((achievement: string) => achievement.trim() !== '')
+        }));
+
+        // Save to Firebase
+        await setDoc(doc(db, 'pages', 'history'), {
+          livesTransformed: values.livesTransformed,
+          communitiesServed: values.communitiesServed,
+          programsCompleted: values.programsCompleted,
+          yearsOfImpact: values.yearsOfImpact,
+          journeys: cleanedJourneys,
+          foundationStory: values.foundationStory,
+          updatedAt: new Date().toISOString(),
+        });
+
+        toast.success('History saved successfully!');
+      } catch (err) {
+        console.error('Error saving:', err);
+        toast.error('Failed to save history. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    },
+  });
+
+  // Fetch data from Firebase on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setFetchingData(true);
+        const docRef = doc(db, 'pages', 'history');
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          formik.setValues({
+            livesTransformed: data.livesTransformed || '',
+            communitiesServed: data.communitiesServed || '',
+            programsCompleted: data.programsCompleted || '',
+            yearsOfImpact: data.yearsOfImpact || '',
+            journeys: data.journeys && data.journeys.length > 0 
+              ? data.journeys.map((journey: any) => ({
+                  year: journey.year || '',
+                  title: journey.title || '',
+                  description: journey.description || '',
+                  keyAchievements: journey.keyAchievements || ['']
+                }))
+              : [{ year: '', title: '', description: '', keyAchievements: [''] }],
+            foundationStory: data.foundationStory || '',
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        toast.error('Failed to load history');
+      } finally {
+        setFetchingData(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const storyLength = formik.values.foundationStory.length;
+  const isStoryValid = storyLength >= 200 && storyLength <= 1000;  const getCharCountColor = () => {
     if (storyLength < 200) return 'text-red-400';
     if (storyLength >= 200 && storyLength <= 1000) return 'text-green-400';
     return 'text-orange-400';
@@ -59,102 +138,35 @@ const DynamicForm = () => {
   };
 
   const addJourney = () => {
-    setFormData(prev => ({
-      ...prev,
-      journeys: [...prev.journeys, { year: '', title: '', description: '', keyAchievements: [''] }]
-    }));
+    formik.setFieldValue('journeys', [...formik.values.journeys, { year: '', title: '', description: '', keyAchievements: [''] }]);
   };
 
   const removeJourney = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      journeys: prev.journeys.filter((_, i) => i !== index)
-    }));
+    formik.setFieldValue('journeys', formik.values.journeys.filter((_: any, i: number) => i !== index));
   };
 
-  const updateJourney = (index: number, field: keyof Journey, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      journeys: prev.journeys.map((journey, i) => 
-        i === index ? { ...journey, [field]: value } : journey
-      )
-    }));
+  const updateJourney = (index: number, field: 'year' | 'title' | 'description', value: string) => {
+    const newJourneys = [...formik.values.journeys];
+    newJourneys[index] = { ...newJourneys[index], [field]: value };
+    formik.setFieldValue('journeys', newJourneys);
   };
 
   const addAchievement = (journeyIndex: number) => {
-    setFormData(prev => ({
-      ...prev,
-      journeys: prev.journeys.map((journey, i) => 
-        i === journeyIndex 
-          ? { ...journey, keyAchievements: [...journey.keyAchievements, ''] }
-          : journey
-      )
-    }));
+    const newJourneys = [...formik.values.journeys];
+    newJourneys[journeyIndex].keyAchievements = [...newJourneys[journeyIndex].keyAchievements, ''];
+    formik.setFieldValue('journeys', newJourneys);
   };
 
   const removeAchievement = (journeyIndex: number, achievementIndex: number) => {
-    setFormData(prev => ({
-      ...prev,
-      journeys: prev.journeys.map((journey, i) => 
-        i === journeyIndex 
-          ? { ...journey, keyAchievements: journey.keyAchievements.filter((_, ai) => ai !== achievementIndex) }
-          : journey
-      )
-    }));
+    const newJourneys = [...formik.values.journeys];
+    newJourneys[journeyIndex].keyAchievements = newJourneys[journeyIndex].keyAchievements.filter((_: any, ai: number) => ai !== achievementIndex);
+    formik.setFieldValue('journeys', newJourneys);
   };
 
   const updateAchievement = (journeyIndex: number, achievementIndex: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      journeys: prev.journeys.map((journey, i) => 
-        i === journeyIndex 
-          ? {
-              ...journey,
-              keyAchievements: journey.keyAchievements.map((achievement, ai) => 
-                ai === achievementIndex ? value : achievement
-              )
-            }
-          : journey
-      )
-    }));
-  };
-
-  const handleSubmit = async () => {
-    if (!isStoryValid) {
-      setSubmitStatus('error');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSubmitStatus(null);
-
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const newSubmission = {
-        ...formData,
-        id: Date.now().toString(),
-        timestamp: new Date().toISOString()
-      };
-      
-      setSubmittedData(prev => [...prev, formData]);
-      console.log('Form Data Submitted:', newSubmission);
-      setSubmitStatus('success');
-      
-      setFormData({
-        livesTransformed: '',
-        communitiesServed: '',
-        programsCompleted: '',
-        yearsOfImpact: '',
-        journeys: [{ year: '', title: '', description: '', keyAchievements: [''] }],
-        foundationStory: ''
-      });
-    } catch (error) {
-      console.error('Submission error:', error);
-      setSubmitStatus('error');
-    } finally {
-      setIsSubmitting(false);
-    }
+    const newJourneys = [...formik.values.journeys];
+    newJourneys[journeyIndex].keyAchievements[achievementIndex] = value;
+    formik.setFieldValue('journeys', newJourneys);
   };
 
   return (
@@ -169,12 +181,26 @@ const DynamicForm = () => {
                   Enter your impact statistics, journey, and foundation story
                 </CardDescription>
               </div>
-              
             </div>
           </CardHeader>
           
           <CardContent className="p-6">
-            <div className="space-y-8">
+            {fetchingData ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading history data...</p>
+                </div>
+              </div>
+            ) : (
+            <form onSubmit={formik.handleSubmit} className="space-y-8">{formik.errors.foundationStory && formik.touched.foundationStory && (
+                <Alert className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  <AlertDescription className="text-red-700 dark:text-red-300">
+                    {formik.errors.foundationStory}
+                  </AlertDescription>
+                </Alert>
+              )}
               {/* Stats Section */}
               <div className="space-y-4">
                 <Label className="text-2xl font-semibold text-slate-600 dark:text-slate-200">Impact Statistics</Label>
@@ -184,8 +210,10 @@ const DynamicForm = () => {
                     <Label className="text-sm text-slate-400">Lives Transformed</Label>
                     <Input
                       placeholder="e.g., 2,500+"
-                      value={formData.livesTransformed}
-                      onChange={(e) => setFormData(prev => ({ ...prev, livesTransformed: e.target.value }))}
+                      name="livesTransformed"
+                      value={formik.values.livesTransformed}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                       className="mt-2  border-slate-700  "
                     />
                   </div>
@@ -194,8 +222,10 @@ const DynamicForm = () => {
                     <Label className="text-sm text-slate-400">Communities Served</Label>
                     <Input
                       placeholder="e.g., 35"
-                      value={formData.communitiesServed}
-                      onChange={(e) => setFormData(prev => ({ ...prev, communitiesServed: e.target.value }))}
+                      name="communitiesServed"
+                      value={formik.values.communitiesServed}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                       className="mt-2  border-slate-700  "
                     />
                   </div>
@@ -204,8 +234,10 @@ const DynamicForm = () => {
                     <Label className="text-sm text-slate-400">Programs Completed</Label>
                     <Input
                       placeholder="e.g., 75+"
-                      value={formData.programsCompleted}
-                      onChange={(e) => setFormData(prev => ({ ...prev, programsCompleted: e.target.value }))}
+                      name="programsCompleted"
+                      value={formik.values.programsCompleted}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                       className="mt-2  border-slate-700  "
                     />
                   </div>
@@ -214,8 +246,10 @@ const DynamicForm = () => {
                     <Label className="text-sm text-slate-400">Years of Impact</Label>
                     <Input
                       placeholder="e.g., 4"
-                      value={formData.yearsOfImpact}
-                      onChange={(e) => setFormData(prev => ({ ...prev, yearsOfImpact: e.target.value }))}
+                      name="yearsOfImpact"
+                      value={formik.values.yearsOfImpact}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                       className="mt-2  border-slate-700  "
                     />
                   </div>
@@ -239,11 +273,11 @@ const DynamicForm = () => {
                 </div>
                 
                 <div className="space-y-4">
-                  {formData.journeys.map((journey, journeyIndex) => (
+                  {formik.values.journeys.map((journey: {year: string; title: string; description: string; keyAchievements: string[]}, journeyIndex: number) => (
                     <div key={journeyIndex} className="p-5  rounded-lg border border-slate-700 space-y-4">
                       <div className="flex items-start justify-between">
                         <Label className="text-lg font-semibold text-slate-300">Journey #{journeyIndex + 1}</Label>
-                        {formData.journeys.length > 1 && (
+                        {formik.values.journeys.length > 1 && (
                           <Button
                             type="button"
                             onClick={() => removeJourney(journeyIndex)}
@@ -303,7 +337,7 @@ const DynamicForm = () => {
                         </div>
 
                         <div className="space-y-2">
-                          {journey.keyAchievements.map((achievement, achievementIndex) => (
+                          {journey.keyAchievements.map((achievement: string, achievementIndex: number) => (
                             <div key={achievementIndex} className="flex gap-2">
                               <Input
                                 placeholder={`Achievement ${achievementIndex + 1}`}
@@ -336,8 +370,10 @@ const DynamicForm = () => {
                 <Label className="text-2xl font-semibold text-slate-600 dark:text-slate-200 ">Foundation Story</Label>
                 <Textarea
                   placeholder="Tell your foundation story (200-1000 characters)..."
-                  value={formData.foundationStory}
-                  onChange={(e) => setFormData(prev => ({ ...prev, foundationStory: e.target.value }))}
+                  name="foundationStory"
+                  value={formik.values.foundationStory}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   className="min-h-40 resize-none border-slate-700 text-black dark: placeholder:text-slate-400 dark:"
                 />
                 
@@ -383,50 +419,18 @@ const DynamicForm = () => {
                 </div>
               </div>
 
-              {/* Submit Status */}
-              {submitStatus === 'success' && (
-                <Alert className="bg-green-950  border-green-800">
-                  <CheckCircle className="w-4 h-4 text-green-400" />
-                  <AlertDescription className="text-green-300">
-                    Form submitted successfully! Data ready for Firebase integration.
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              {submitStatus === 'error' && (
-                <Alert className="bg-red-950 border-red-800">
-                  <AlertCircle className="w-4 h-4 text-red-400" />
-                  <AlertDescription className="text-red-300">
-                    Please ensure the foundation story is between 200-1000 characters.
-                  </AlertDescription>
-                </Alert>
-              )}
-
               {/* Submit Button */}
               <Button 
-                onClick={handleSubmit} 
-                disabled={isSubmitting || !isStoryValid}
+                type="submit"
+                disabled={formik.isSubmitting || !formik.isValid}
                 className="w-full  font-semibold py-6 text-lg"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+                {formik.isSubmitting ? 'Saving...' : 'Save Content'}
               </Button>
-            </div>
+            </form>
+            )}
           </CardContent>
         </Card>
-
-        {/* Submitted Data Preview */}
-        {submittedData.length > 0 && (
-          <Card className="mt-6 bg-slate-900 border-slate-800">
-            <CardHeader>
-              <CardTitle className="text-lg text-slate-200">Submitted Data ({submittedData.length})</CardTitle>
-            </CardHeader>
-            <CardContent className="max-h-64 overflow-y-auto">
-              <pre className="text-xs admin text-slate-300 p-4 rounded border border-slate-800">
-                {JSON.stringify(submittedData, null, 2)}
-              </pre>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );
