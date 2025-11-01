@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
-
 // Types
 interface BankDetails {
   id: string;
@@ -622,7 +621,6 @@ const BankCRUDApp = () => {
       </AnimatePresence>
     
     </div>
-
    </>
   );
 };

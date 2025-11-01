@@ -221,10 +221,10 @@ export default function adminLayout({ children }: adminLayoutProps) {
     { href: '/admin/pressreleases', label: 'Press Releases', icon: BookOpenText },
     { href: '/admin/history', label: 'History', icon: Clock },
     { href: '/admin/missionandvision', label: 'Mission & Vision', icon: Telescope },
-      { href: '/admin/payment', label: 'Payment', icon: Telescope },
-       { href: '/admin/carousel', label: 'Carousel', icon: Telescope },
-
+    { href: '/admin/payment', label: 'Payment', icon: Telescope },
+    { href: '/admin/carousel', label: 'Carousel', icon: Telescope },
   ];
+  
 
   const settingsItems: NavigationItem[] = [
     { href: '/admin/profile', label: 'Profile', icon: User },
