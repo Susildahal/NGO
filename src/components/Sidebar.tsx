@@ -223,6 +223,7 @@ export default function adminLayout({ children }: adminLayoutProps) {
     { href: '/admin/missionandvision', label: 'Mission & Vision', icon: Telescope },
     { href: '/admin/payment', label: 'Payment', icon: Telescope },
     { href: '/admin/carousel', label: 'Carousel', icon: Telescope },
+    { href: '/admin/notic', label: 'Notices', icon: Bell },
   ];
   
 
