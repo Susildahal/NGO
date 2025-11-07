@@ -1,9 +1,9 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import { z } from 'zod';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
+
 import {
   Dialog,
   DialogContent,
@@ -16,18 +16,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { closeModal, addItem, updateItem } from '@/store/slices/noticSlicer';
+import { closeModal, createNotice, updateNotice } from '@/store/slices/noticSlicer';
 import toast from 'react-hot-toast';
 import { AlertCircle, Upload, X, FileText } from 'lucide-react';
+import { getFileUrl } from '@/utils/fileHelpers';
 
 // Validation schema
 const noticeSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must not exceed 100 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters').max(500, 'Description must not exceed 500 characters'),
   fileType: z.enum(['image', 'pdf']),
-  file: z.string().min(1, 'File is required'),
+  photo: z.string().optional(),  // For image files
+  file: z.string().optional(),   // For PDF files
   category: z.string().min(1, 'Category is required'),
   status: z.enum(['active', 'inactive']),
+}).refine((data) => {
+  // Ensure at least one file is provided based on fileType
+  if (data.fileType === 'image') {
+    return !!data.photo || data.photo === 'file-selected';
+  } else {
+    return !!data.file;
+  }
+}, {
+  message: 'File is required',
+  path: ['file'],
 });
 
 type NoticeFormData = z.infer<typeof noticeSchema>;
@@ -43,6 +55,7 @@ export function NoticeModal() {
       title: '',
       description: '',
       fileType: 'image',
+      photo: '',
       file: '',
       category: '',
       status: 'active',
@@ -52,43 +65,39 @@ export function NoticeModal() {
     validateOnBlur: true,
     onSubmit: async (values, { resetForm }) => {
       try {
-        // TODO: Replace with your actual API endpoint
-        // const endpoint = editingItem
-        //   ? `/api/notice/${editingItem.id}`
-        //   : '/api/notice';
-        
-        // const method = editingItem ? 'PUT' : 'POST';
+        // Create FormData for binary file upload
+        const formData = new FormData();
+        formData.append('title', values.title);
+        formData.append('description', values.description);
+        formData.append('fileType', values.fileType);
+        formData.append('category', values.category);
+        formData.append('status', values.status);
 
-        // const response = await fetch(endpoint, {
-        //   method,
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify(values),
-        // });
-
-        // if (!response.ok) {
-        //   throw new Error('Failed to save notice');
-        // }
-
-        // const data = await response.json();
-
-        // Mock data for now (replace with actual API response)
-        const data = {
-          ...values,
-          id: editingItem?.id || Date.now().toString(),
-          createdAt: editingItem?.createdAt || new Date().toISOString(),
-        };
+        // Add file to FormData based on type
+        if (values.fileType === 'image' && selectedFile) {
+          // For images, send the actual file (binary)
+          formData.append('photo', selectedFile);
+        } else if (values.fileType === 'pdf' && values.file) {
+          // For PDFs, send the URL as text
+          formData.append('file', values.file);
+        }
 
         if (editingItem) {
-          dispatch(updateItem(data));
+          // Update existing notice
+          await dispatch(updateNotice({
+            id: editingItem.id,
+            formData,
+          })).unwrap();
           toast.success('Notice updated successfully!');
         } else {
-          dispatch(addItem(data));
+          // Create new notice
+          await dispatch(createNotice(formData)).unwrap();
           toast.success('Notice added successfully!');
         }
 
         resetForm();
+        setSelectedFile(null);
+        setFilePreview('');
         dispatch(closeModal());
       } catch (error) {
         console.error('Error saving notice:', error);
@@ -104,11 +113,20 @@ export function NoticeModal() {
         title: editingItem.title,
         description: editingItem.description,
         fileType: editingItem.fileType,
-        file: editingItem.file,
+        photo: editingItem.photo || '',
+        file: editingItem.file || '',
         category: editingItem.category,
         status: editingItem.status,
       });
-      setFilePreview(editingItem.file);
+      
+      // Set preview URL using helper function
+      const fileUrl = editingItem.fileType === 'image' 
+        ? (editingItem.photo || '') 
+        : (editingItem.file || '');
+      
+      if (fileUrl) {
+        setFilePreview(getFileUrl(fileUrl, editingItem.fileType));
+      }
     } else {
       formik.resetForm();
       setFilePreview('');
@@ -117,6 +135,10 @@ export function NoticeModal() {
   }, [editingItem]);
 
   const handleClose = () => {
+    // Cleanup preview URL if it's an object URL
+    if (filePreview && filePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(filePreview);
+    }
     formik.resetForm();
     setFilePreview('');
     setSelectedFile(null);
@@ -142,20 +164,23 @@ export function NoticeModal() {
 
       setSelectedFile(file);
 
-      // Create Base64 preview for images only
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setFilePreview(result);
-        formik.setFieldValue('file', result);
-      };
-      reader.readAsDataURL(file);
+      // Create preview URL for display only (not for upload)
+      const previewUrl = URL.createObjectURL(file);
+      setFilePreview(previewUrl);
+      
+      // Set a placeholder value to pass validation
+      formik.setFieldValue('photo', 'file-selected');
     }
   };
 
   const handleRemoveFile = () => {
+    // Cleanup preview URL if it's an object URL
+    if (filePreview && filePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(filePreview);
+    }
     setFilePreview('');
     setSelectedFile(null);
+    formik.setFieldValue('photo', '');
     formik.setFieldValue('file', '');
   };
 
@@ -163,8 +188,12 @@ export function NoticeModal() {
     const newFileType = e.target.value as 'image' | 'pdf';
     formik.setFieldValue('fileType', newFileType);
     // Clear file when changing type
+    if (filePreview && filePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(filePreview);
+    }
     setFilePreview('');
     setSelectedFile(null);
+    formik.setFieldValue('photo', '');
     formik.setFieldValue('file', '');
   };
 

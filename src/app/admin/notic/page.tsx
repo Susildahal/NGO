@@ -23,61 +23,57 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setItems, deleteItem, openModal, setLoading } from '@/store/slices/noticSlicer';
+import { openModal, fetchNotices, deleteNotice } from '@/store/slices/noticSlicer';
 import { NoticeModal } from '@/components/NoticeModal';
 import toast from 'react-hot-toast';
 import { Plus, Edit, Trash2, Search, Bell, FileText, Image as ImageIcon, ExternalLink } from 'lucide-react';
 import type { NoticItem } from '@/store/slices/noticSlicer';
+import { getFileUrl } from '@/utils/fileHelpers';
+import { Pagination } from '@/components/Pagination';
+import Image from 'next/image';
 
 export default function NoticePage() {
   const dispatch = useAppDispatch();
-  const { items, loading } = useAppSelector((state) => state.notic);
+  const { items, loading, pagination } = useAppSelector((state) => state.notic);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  // Fetch notice items on mount
+  // Debounce search query
   useEffect(() => {
-    fetchNoticeItems();
-  }, []);
-  const fetchNoticeItems = async () => {
-    dispatch(setLoading(true));
-    try {
-      // TODO: Replace with your actual API endpoint
-      // const response = await fetch('/api/notice');
-      
-      // if (!response.ok) {
-      //   throw new Error('Failed to fetch notice items');
-      // }
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1); // Reset to first page on search
+    }, 500);
 
-      // const data = await response.json();
-      // dispatch(setItems(data));
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-      // Mock data for demo
-      dispatch(setItems([]));
-    } catch (error) {
-      console.error('Error fetching notices:', error);
-      toast.error('Failed to load notices');
-      // Set mock data for demo
-      dispatch(setItems([]));
-    } finally {
-      dispatch(setLoading(false));
+  // Fetch notice items with filters and pagination
+  useEffect(() => {
+    const params: any = {
+      page: currentPage,
+      limit: itemsPerPage,
+    };
+
+    if (debouncedSearch) {
+      params.q = debouncedSearch;
     }
-  };
+
+    if (filterStatus && filterStatus !== 'all') {
+      params.status = filterStatus;
+    }
+
+    dispatch(fetchNotices(params));
+  }, [dispatch, currentPage, itemsPerPage, debouncedSearch, filterStatus]);
 
   const handleDelete = async (id: string) => {
     try {
-      // TODO: Replace with your actual API endpoint
-      const response = await fetch(`/api/carousel/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete carousel item');
-      }
-
-      dispatch(deleteItem(id));
+      await dispatch(deleteNotice(id)).unwrap();
       toast.success('Notice deleted successfully!');
     } catch (error) {
       console.error('Error deleting notice:', error);
@@ -101,19 +97,28 @@ export default function NoticePage() {
     dispatch(openModal(null));
   };
 
-  // Filter items based on search query and status
-  const filteredItems = items.filter((item) => {
-    const matchesSearch =
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase());
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
-    const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
+  const handleItemsPerPageChange = (limit: number) => {
+    setItemsPerPage(limit);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
 
-    return matchesSearch && matchesStatus;
-  });
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilterStatus(e.target.value);
+    setCurrentPage(1); // Reset to first page on filter change
+  };
+
+  const totalPages = pagination ? Math.ceil(pagination.totalCount / pagination.limit) : 1;
 
   return (
+
+
+
+
+    
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-6 px-4">
         <Card>
@@ -151,7 +156,7 @@ export default function NoticePage() {
               </div>
               <select
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
+                onChange={handleStatusFilterChange}
                 className="px-4 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary min-w-[150px]"
               >
                 <option value="all">All Status</option>
@@ -171,7 +176,7 @@ export default function NoticePage() {
             )}
 
             {/* Empty State */}
-            {!loading && filteredItems.length === 0 && (
+            {!loading && items.length === 0 && (
               <div className="text-center py-16 bg-muted/20 rounded-lg border-2 border-dashed">
                 <Bell className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
                 <h3 className="text-lg font-semibold mb-2">No notices found</h3>
@@ -190,7 +195,7 @@ export default function NoticePage() {
             )}
 
             {/* Table View */}
-            {!loading && filteredItems.length > 0 && (
+            {!loading && items.length > 0 && (
               <div className="space-y-4">
                 <div className="rounded-md border">
                   <Table>
@@ -206,7 +211,7 @@ export default function NoticePage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredItems.map((item) => (
+                      {items.map((item) => (
                         <TableRow key={item.id} className="hover:bg-muted/50">
                           {/* File Type */}
                           <TableCell>
@@ -214,7 +219,7 @@ export default function NoticePage() {
                               {item.fileType === 'image' ? (
                                 <div className="flex items-center gap-2">
                                   <ImageIcon className="w-4 h-4 text-blue-600" />
-                                  <span className="text-xs font-medium text-blue-600">Image</span>
+                                  <span className="text-xs font-medium text-blue-600">Image   </span>
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-2">
@@ -263,7 +268,10 @@ export default function NoticePage() {
                           <TableCell className="text-center">
                             {item.fileType === 'image' ? (
                               <button
-                                onClick={() => window.open(item.file, '_blank')}
+                                onClick={() => {
+                                  const fileUrl = item.photo || item.file || '';
+                                  if (fileUrl) window.open(getFileUrl(fileUrl, item.fileType), '_blank');
+                                }}
                                 className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                               >
                                 <ImageIcon className="w-4 h-4" />
@@ -271,7 +279,10 @@ export default function NoticePage() {
                               </button>
                             ) : (
                               <button
-                                onClick={() => window.open(item.file, '_blank')}
+                                onClick={() => {
+                                  const fileUrl = item.file || item.photo || '';
+                                  if (fileUrl) window.open(getFileUrl(fileUrl, item.fileType), '_blank');
+                                }}
                                 className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                               >
                                 <ExternalLink className="w-4 h-4" />
@@ -309,25 +320,17 @@ export default function NoticePage() {
                   </Table>
                 </div>
 
-                {/* Items Count */}
-                <div className="flex items-center justify-between text-sm text-muted-foreground bg-muted/30 px-4 py-3 rounded-lg">
-                  <div>
-                    Showing <span className="font-semibold text-foreground">{filteredItems.length}</span> of{' '}
-                    <span className="font-semibold text-foreground">{items.length}</span> notice(s)
-                  </div>
-                  {(searchQuery || filterStatus !== 'all') && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSearchQuery('');
-                        setFilterStatus('all');
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
-                  )}
-                </div>
+                {/* Pagination */}
+                {pagination && pagination.totalCount > 0 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={pagination.totalCount}
+                    onItemsPerPageChange={handleItemsPerPageChange}
+                  />
+                )}
               </div>
             )}
           </CardContent>

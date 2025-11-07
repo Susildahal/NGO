@@ -207,12 +207,12 @@ export default function adminLayout({ children }: adminLayoutProps) {
     },
     { 
       href: '/admin/volunteers', 
-      label: 'Volunteers', 
+      label: 'Payments', 
       icon: Users, 
       badge: '24',
       children: [
-        { href: '/admin/volunteers/active', label: 'Active', icon: Users },
-        { href: '/admin/volunteers/pending', label: 'Pending', icon: UserPlus },
+        { href: '/admin/volunteers/active', label: 'Doner Management', icon: Users },
+        { href: '/admin/volunteers/pending', label: 'Amount Details', icon: UserPlus },
       ]
     },
     { href: '/admin/accounts', label: 'Accounts', icon: UserPlus },
@@ -221,7 +221,7 @@ export default function adminLayout({ children }: adminLayoutProps) {
     { href: '/admin/pressreleases', label: 'Press Releases', icon: BookOpenText },
     { href: '/admin/history', label: 'History', icon: Clock },
     { href: '/admin/missionandvision', label: 'Mission & Vision', icon: Telescope },
-    { href: '/admin/payment', label: 'Payment', icon: Telescope },
+    { href: '/admin/payment', label: 'Bank Details', icon: Telescope },
     { href: '/admin/carousel', label: 'Carousel', icon: Telescope },
     { href: '/admin/notic', label: 'Notices', icon: Bell },
   ];
