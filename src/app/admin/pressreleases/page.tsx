@@ -381,7 +381,7 @@ useEffect(() => {
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <p className="text-muted-foreground"><Spinners /></p>
+            <p className="text-muted-foreground"></p>
           </div>
         ) : videos.length === 0 ? (
           <div className="flex justify-center items-center py-12">

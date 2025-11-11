@@ -196,27 +196,27 @@ export default function adminLayout({ children }: adminLayoutProps) {
       label: 'Dashboard', 
       icon: Home,
     },
-    { 
-      href: '/admin/stats', 
-      label: 'Stats & Analytics', 
-      icon: BarChart3,
-      children: [
-        { href: '/admin/stats/reports', label: 'Reports', icon: FileText },
-        { href: '/admin/stats/metrics', label: 'Metrics', icon: BarChart3 },
-      ]
-    },
-    { 
-      href: '/admin/volunteers', 
-      label: 'Payments', 
-      icon: Users, 
-      badge: '24',
-      children: [
-        { href: '/admin/volunteers/active', label: 'Doner Management', icon: Users },
-        { href: '/admin/volunteers/pending', label: 'Amount Details', icon: UserPlus },
-      ]
-    },
+    // { 
+    //   href: '/admin/stats', 
+    //   label: 'Stats & Analytics', 
+    //   icon: BarChart3,
+    //   children: [
+    //     { href: '/admin/stats/reports', label: 'Reports', icon: FileText },
+    //     { href: '/admin/stats/metrics', label: 'Metrics', icon: BarChart3 },
+    //   ]
+    // },
+    // { 
+    //   href: '/admin/volunteers', 
+    //   label: 'Payments', 
+    //   icon: Users, 
+    //   badge: '24',
+    //   children: [
+    //     { href: '/admin/volunteers/active', label: 'Doner Management', icon: Users },
+    //     { href: '/admin/volunteers/pending', label: 'Amount Details', icon: UserPlus },
+    //   ]
+    // },
     { href: '/admin/accounts', label: 'Accounts', icon: UserPlus },
-    { href: '/admin/events', label: 'Events', icon: Calendar, badge: '3' },
+    // { href: '/admin/events', label: 'Events', icon: Calendar, badge: '3' },
     { href: '/admin/video', label: 'Videos', icon: Video },
     { href: '/admin/blog', label: 'Blog', icon: Newspaper },
     { href: '/admin/gallery', label: 'Gallery', icon: Image },
@@ -227,6 +227,7 @@ export default function adminLayout({ children }: adminLayoutProps) {
     { href: '/admin/carousel', label: 'Carousel', icon: Telescope },
     { href: '/admin/notic', label: 'Notices', icon: Bell },
     { href: '/admin/team', label: 'Team', icon: Users },
+    { href: '/admin/successstory', label: 'Success Stories', icon: Laptop },
   ];
   
 
