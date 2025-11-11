@@ -3,6 +3,7 @@ import { api } from '@/lib/axios';
 import axiosInstance from '@/lib/axios';
 export interface NoticItem {
   id: string;
+  _id?: string;  // MongoDB uses _id
   title: string;
   description: string;
   fileType: 'image' | 'pdf';
@@ -95,9 +96,12 @@ export const deleteNotice = createAsyncThunk(
   'notic/deleteNotice',
   async (id: string, { rejectWithValue }) => {
     try {
+      console.log('Deleting notice with ID:', id);
       await axiosInstance.delete(`/notices/${id}`);
+      console.log('Notice deleted successfully');
       return id;
     } catch (error: any) {
+      console.error('Delete error:', error);
       return rejectWithValue(error.response?.data?.message || 'Failed to delete notice');
     }
   }
@@ -173,7 +177,12 @@ const noticSlicer = createSlice({
     });
     builder.addCase(updateNotice.fulfilled, (state, action) => {
       state.loading = false;
-      const index = state.items.findIndex(item => item.id === action.payload.id);
+      // Handle both id and _id for MongoDB
+      const updatedId = action.payload.id || (action.payload as any)._id;
+      const index = state.items.findIndex(item => {
+        const itemId = item.id || (item as any)._id;
+        return itemId === updatedId;
+      });
       if (index !== -1) {
         state.items[index] = action.payload;
       }
@@ -192,7 +201,11 @@ const noticSlicer = createSlice({
     });
     builder.addCase(deleteNotice.fulfilled, (state, action) => {
       state.loading = false;
-      state.items = state.items.filter(item => item.id !== action.payload);
+      // Handle both id and _id for MongoDB
+      state.items = state.items.filter(item => {
+        const itemId = item.id || (item as any)._id;
+        return itemId !== action.payload;
+      });
     });
     builder.addCase(deleteNotice.rejected, (state, action) => {
       state.loading = false;

@@ -83,9 +83,12 @@ export function NoticeModal() {
         }
 
         if (editingItem) {
-          // Update existing notice
+          // Update existing notice - handle both id and _id (MongoDB)
+          const itemId = editingItem.id || (editingItem as any)._id;
+          console.log('Updating notice with ID:', itemId);
+          
           await dispatch(updateNotice({
-            id: editingItem.id,
+            id: itemId,
             formData,
           })).unwrap();
           toast.success('Notice updated successfully!');

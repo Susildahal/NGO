@@ -4,6 +4,9 @@ import { Plus, Pencil, Trash2, Upload, X, Check, Loader2, AlertCircle } from 'lu
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import axiosInstance from '@/lib/axios';
+import toast from 'react-hot-toast';
+import { getFileUrl } from '@/utils/fileHelpers';
 
 // Types
 interface BankDetails {
@@ -13,7 +16,7 @@ interface BankDetails {
   accountHolderName: string;
   phoneNumber: string;
   email: string;
-  ifscCode: string;
+ 
   branchName: string;
   accountType: 'Savings' | 'Current' | 'Business';
   qrCodeImage: string;
@@ -46,9 +49,7 @@ const validationSchema = Yup.object().shape({
   email: Yup.string()
     .email('Invalid email address')
     .required('Email is required'),
-  ifscCode: Yup.string()
-    .matches(/^[A-Z0-9]{11}$/, 'IFSC code must be 11 characters (alphanumeric)')
-    .required('IFSC code is required'),
+
   branchName: Yup.string()
     .min(2, 'Branch name must be at least 2 characters')
     .max(100, 'Branch name must not exceed 100 characters')
@@ -71,11 +72,41 @@ const BankCRUDApp = () => {
     message: ''
   });
   const [qrCodeImage, setQrCodeImage] = useState('');
+  const [qrCodeFile, setQrCodeFile] = useState<File | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    fetchBankDetails();
   }, []);
+
+  // Fetch bank details from backend
+  const fetchBankDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get('/bankdetails');
+      console.log('Bank details response:', response.data);
+      
+      // Handle different response structures
+      const data = response.data?.bankDetails|| response.data || [];
+      
+      // Ensure we have an array
+      if (Array.isArray(data)) {
+        setBanks(data);
+      } else {
+        console.error('Expected array but got:', typeof data, data);
+        setBanks([]);
+        toast.error('Invalid data format received from server');
+      }
+    } catch (error) {
+      console.error('Error fetching bank details:', error);
+      setBanks([]); // Set empty array on error
+      toast.error('Failed to load bank details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Formik initialization
   const formik = useFormik({
@@ -85,27 +116,52 @@ const BankCRUDApp = () => {
       accountHolderName: '',
       phoneNumber: '',
       email: '',
-      ifscCode: '',
       branchName: '',
       accountType: 'Savings' as const,
       status: 'Active' as const,
     },
     validationSchema,
-    onSubmit: (values) => {
-      const newBank: BankDetails = {
-        ...values,
-        qrCodeImage,
-        id: editingBank?.id || Date.now().toString(),
-        createdAt: editingBank?.createdAt || new Date().toISOString()
-      };
+    onSubmit: async (values) => {
+      try {
+        const formData = new FormData();
+        formData.append('bankName', values.bankName);
+        formData.append('accountNumber', values.accountNumber);
+        formData.append('accountHolderName', values.accountHolderName);
+        formData.append('phoneNumber', values.phoneNumber);
+        formData.append('email', values.email);
+        formData.append('branchName', values.branchName);
+        formData.append('accountType', values.accountType);
+        formData.append('status', values.status);
 
-      if (editingBank) {
-        setBanks(prev => prev.map(bank => bank.id === editingBank.id ? newBank : bank));
-      } else {
-        setBanks(prev => [...prev, newBank]);
+        if (qrCodeFile) {
+          formData.append('qrCodeImage', qrCodeFile);
+        }
+
+        if (editingBank) {
+          // Update existing bank detail
+          const itemId = editingBank.id || (editingBank as any)._id;
+          await axiosInstance.put(`/bankdetails/${itemId}`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          toast.success('Bank account updated successfully!');
+        } else {
+          // Create new bank detail
+          await axiosInstance.post('/bankdetails', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          toast.success('Bank account added successfully!');
+        }
+
+        await fetchBankDetails();
+        resetForm();
+      } catch (error: any) {
+        console.error('Error saving bank details:', error);
+        toast.error(error.response?.data?.message || 'Failed to save bank account');
       }
-
-      resetForm();
     },
   });
 
@@ -115,6 +171,9 @@ const BankCRUDApp = () => {
     if (!file) return;
 
     setImageUploadStatus({ status: 'uploading', progress: 0, message: 'Uploading image...' });
+    
+    // Store the actual file for binary upload
+    setQrCodeFile(file);
 
     // Simulate upload progress
     let progress = 0;
@@ -150,25 +209,34 @@ const BankCRUDApp = () => {
       accountHolderName: bank.accountHolderName,
       phoneNumber: bank.phoneNumber,
       email: bank.email,
-      ifscCode: bank.ifscCode,
+  
       branchName: bank.branchName,
       accountType: bank.accountType as never,
       status: bank.status as never,
     };
     formik.resetForm({ values: newValues });
     setQrCodeImage(bank.qrCodeImage);
+    setQrCodeFile(null); // Clear the file since we're editing
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this bank account?')) {
-      setBanks(prev => prev.filter(bank => bank.id !== id));
+      try {
+        await axiosInstance.delete(`/bankdetails/${id}`);
+        toast.success('Bank account deleted successfully!');
+        await fetchBankDetails();
+      } catch (error: any) {
+        console.error('Error deleting bank details:', error);
+        toast.error(error.response?.data?.message || 'Failed to delete bank account');
+      }
     }
   };
 
   const resetForm = () => {
     formik.resetForm();
     setQrCodeImage('');
+    setQrCodeFile(null);
     setEditingBank(null);
     setIsModalOpen(false);
     setImageUploadStatus({ status: 'idle', progress: 0, message: '' });
@@ -183,10 +251,16 @@ const BankCRUDApp = () => {
   const handleOpenModal = () => {
     setEditingBank(null);
     setQrCodeImage('');
+    setQrCodeFile(null);
     formik.resetForm();
     setImageUploadStatus({ status: 'idle', progress: 0, message: '' });
     setIsModalOpen(true);
   };
+
+  // Fetch bank details on component mount
+  useEffect(() => {
+    fetchBankDetails();
+  }, []);
 
   if (!mounted) return null;
 
@@ -227,8 +301,9 @@ const BankCRUDApp = () => {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Bank Name</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Account Holder</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Account Number</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">IFSC Code</th>
+                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Account Holder email</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Phone</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Account Type</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Status</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">QR Code</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Actions</th>
@@ -236,16 +311,18 @@ const BankCRUDApp = () => {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {banks.length === 0 ? (
+                  {!Array.isArray(banks) || banks.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
-                        No bank accounts found. Add your first account to get started!
+                        {loading ? 'Loading...' : 'No bank accounts found. Add your first account to get started!'}
                       </td>
                     </tr>
                   ) : (
-                    banks.map((bank) => (
+                    banks.map((bank) => {
+                      const bankId = bank.id || (bank as any)._id;
+                      return (
                       <motion.tr
-                        key={bank.id}
+                        key={bankId}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
@@ -253,9 +330,11 @@ const BankCRUDApp = () => {
                       >
                         <td className="px-6 py-4 text-sm text-foreground">{bank.bankName}</td>
                         <td className="px-6 py-4 text-sm text-foreground">{bank.accountHolderName}</td>
+
                         <td className="px-6 py-4 text-sm font-mono text-foreground">{bank.accountNumber}</td>
-                        <td className="px-6 py-4 text-sm font-mono text-foreground">{bank.ifscCode}</td>
+                        <td className="px-6 py-4 text-sm text-foreground">{bank.email}</td>
                         <td className="px-6 py-4 text-sm text-foreground">{bank.phoneNumber}</td>
+                        <td className="px-6 py-4 text-sm text-foreground">{bank.accountType}</td>
                         <td className="px-6 py-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                             bank.status === 'Active' 
@@ -267,7 +346,11 @@ const BankCRUDApp = () => {
                         </td>
                         <td className="px-6 py-4">
                           {bank.qrCodeImage ? (
-                            <img src={bank.qrCodeImage} alt="QR Code" className="w-12 h-12 rounded border border-border" />
+                            <img 
+                              src={getFileUrl(bank.qrCodeImage, 'image')} 
+                              alt="QR Code" 
+                              className="w-12 h-12 rounded border border-border object-cover" 
+                            />
                           ) : (
                             <span className="text-xs text-muted-foreground">No image</span>
                           )}
@@ -285,7 +368,7 @@ const BankCRUDApp = () => {
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
-                              onClick={() => handleDelete(bank.id)}
+                              onClick={() => handleDelete(bankId)}
                               className="p-2 text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20 rounded-lg transition-colors"
                             >
                               <Trash2 size={18} />
@@ -293,7 +376,8 @@ const BankCRUDApp = () => {
                           </div>
                         </td>
                       </motion.tr>
-                    ))
+                    );
+                    })
                   )}
                 </AnimatePresence>
               </tbody>
@@ -345,7 +429,7 @@ const BankCRUDApp = () => {
                         className={`w-full px-4 py-2 border rounded-lg bg-background dark:bg-slate-800 text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all ${
                           getFieldError('bankName') ? 'border-destructive' : 'border-input'
                         }`}
-                        placeholder="e.g., State Bank of India"
+                        placeholder="e.g., Nepal Bank "
                       />
                       {getFieldError('bankName') && (
                         <div className="flex items-center gap-2 mt-2 text-destructive text-sm">
@@ -366,7 +450,7 @@ const BankCRUDApp = () => {
                         className={`w-full px-4 py-2 border rounded-lg bg-background dark:bg-slate-800 text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all ${
                           getFieldError('accountHolderName') ? 'border-destructive' : 'border-input'
                         }`}
-                        placeholder="e.g., John Doe"
+                        placeholder="e.g., Sushil dahal"
                       />
                       {getFieldError('accountHolderName') && (
                         <div className="flex items-center gap-2 mt-2 text-destructive text-sm">
@@ -397,26 +481,8 @@ const BankCRUDApp = () => {
                       )}
                     </div>
 
-                    {/* IFSC Code */}
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        IFSC Code *
-                      </label>
-                      <input
-                        type="text"
-                        {...formik.getFieldProps('ifscCode')}
-                        className={`w-full px-4 py-2 border rounded-lg bg-background dark:bg-slate-800 text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-mono uppercase ${
-                          getFieldError('ifscCode') ? 'border-destructive' : 'border-input'
-                        }`}
-                        placeholder="e.g., SBIN0001234"
-                      />
-                      {getFieldError('ifscCode') && (
-                        <div className="flex items-center gap-2 mt-2 text-destructive text-sm">
-                          <AlertCircle size={16} />
-                          {getFieldError('ifscCode')}
-                        </div>
-                      )}
-                    </div>
+                  
+                   
 
                     {/* Branch Name */}
                     <div>
@@ -494,7 +560,7 @@ const BankCRUDApp = () => {
                         className={`w-full px-4 py-2 border rounded-lg bg-background dark:bg-slate-800 text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all ${
                           getFieldError('email') ? 'border-destructive' : 'border-input'
                         }`}
-                        placeholder="e.g., john@example.com"
+                        placeholder="e.g., susil@example.com"
                       />
                       {getFieldError('email') && (
                         <div className="flex items-center gap-2 mt-2 text-destructive text-sm">
@@ -543,7 +609,13 @@ const BankCRUDApp = () => {
                       <label htmlFor="qr-upload" className="cursor-pointer">
                         {qrCodeImage ? (
                           <div className="flex flex-col items-center gap-3">
-                            <img src={qrCodeImage} alt="QR Preview" className="w-32 h-32 rounded-lg border border-border" />
+                            <img 
+                              src={qrCodeImage.startsWith('blob:') || qrCodeImage.startsWith('data:') 
+                                ? qrCodeImage 
+                                : getFileUrl(qrCodeImage, 'image')} 
+                              alt="QR Preview" 
+                              className="w-32 h-32 rounded-lg border border-border object-cover" 
+                            />
                             <span className="text-sm text-primary hover:text-primary/80">Change Image</span>
                           </div>
                         ) : (

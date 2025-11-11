@@ -26,8 +26,8 @@ import {
   Video,
   Clock,
   Home,
-  
- 
+  Image,
+  Newspaper,
   Laptop,
   ChevronLeft,
   ChevronRight,
@@ -218,12 +218,15 @@ export default function adminLayout({ children }: adminLayoutProps) {
     { href: '/admin/accounts', label: 'Accounts', icon: UserPlus },
     { href: '/admin/events', label: 'Events', icon: Calendar, badge: '3' },
     { href: '/admin/video', label: 'Videos', icon: Video },
+    { href: '/admin/blog', label: 'Blog', icon: Newspaper },
+    { href: '/admin/gallery', label: 'Gallery', icon: Image },
     { href: '/admin/pressreleases', label: 'Press Releases', icon: BookOpenText },
     { href: '/admin/history', label: 'History', icon: Clock },
     { href: '/admin/missionandvision', label: 'Mission & Vision', icon: Telescope },
     { href: '/admin/payment', label: 'Bank Details', icon: Telescope },
     { href: '/admin/carousel', label: 'Carousel', icon: Telescope },
     { href: '/admin/notic', label: 'Notices', icon: Bell },
+    { href: '/admin/team', label: 'Team', icon: Users },
   ];
   
 

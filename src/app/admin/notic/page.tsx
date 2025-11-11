@@ -30,11 +30,10 @@ import { Plus, Edit, Trash2, Search, Bell, FileText, Image as ImageIcon, Externa
 import type { NoticItem } from '@/store/slices/noticSlicer';
 import { getFileUrl } from '@/utils/fileHelpers';
 import { Pagination } from '@/components/Pagination';
-import Image from 'next/image';
 
 export default function NoticePage() {
   const dispatch = useAppDispatch();
-  const { items, loading, pagination } = useAppSelector((state) => state.notic);
+  const { items, loading, pagination, isModalOpen } = useAppSelector((state) => state.notic);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -42,6 +41,7 @@ export default function NoticePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [wasModalOpen, setWasModalOpen] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -71,10 +71,48 @@ export default function NoticePage() {
     dispatch(fetchNotices(params));
   }, [dispatch, currentPage, itemsPerPage, debouncedSearch, filterStatus]);
 
+  // Refetch when modal closes after create/update
+  useEffect(() => {
+    if (wasModalOpen && !isModalOpen) {
+      // Modal was just closed, refetch the list
+      const params: any = {
+        page: currentPage,
+        limit: itemsPerPage,
+      };
+
+      if (debouncedSearch) {
+        params.q = debouncedSearch;
+      }
+
+      if (filterStatus && filterStatus !== 'all') {
+        params.status = filterStatus;
+      }
+
+      dispatch(fetchNotices(params));
+    }
+    setWasModalOpen(isModalOpen);
+  }, [isModalOpen, wasModalOpen, currentPage, itemsPerPage, debouncedSearch, filterStatus, dispatch]);
+
   const handleDelete = async (id: string) => {
     try {
       await dispatch(deleteNotice(id)).unwrap();
       toast.success('Notice deleted successfully!');
+      
+      // Refresh the list after deletion
+      const params: any = {
+        page: currentPage,
+        limit: itemsPerPage,
+      };
+
+      if (debouncedSearch) {
+        params.q = debouncedSearch;
+      }
+
+      if (filterStatus && filterStatus !== 'all') {
+        params.status = filterStatus;
+      }
+
+      dispatch(fetchNotices(params));
     } catch (error) {
       console.error('Error deleting notice:', error);
       toast.error('Failed to delete notice');
@@ -85,6 +123,7 @@ export default function NoticePage() {
   };
 
   const confirmDelete = (id: string) => {
+    console.log('Confirm delete for ID:', id);
     setItemToDelete(id);
     setDeleteDialogOpen(true);
   };
@@ -197,10 +236,10 @@ export default function NoticePage() {
             {/* Table View */}
             {!loading && items.length > 0 && (
               <div className="space-y-4">
-                <div className="rounded-md border">
+                <div className="">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/50">
+                      <TableRow className="">
                         <TableHead className="w-[100px]">Type</TableHead>
                         <TableHead className="w-[250px]">Title</TableHead>
                         <TableHead>Description</TableHead>
@@ -211,8 +250,10 @@ export default function NoticePage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {items.map((item) => (
-                        <TableRow key={item.id} className="hover:bg-muted/50">
+                      {items.map((item) => {
+                        const itemId = item.id || (item as any)._id;
+                        return (
+                        <TableRow key={itemId} className="hover:bg-muted/50">
                           {/* File Type */}
                           <TableCell>
                             <div className="flex items-center gap-2">
@@ -304,7 +345,7 @@ export default function NoticePage() {
                                 Edit
                               </Button>
                               <Button
-                                onClick={() => confirmDelete(item.id)}
+                                onClick={() => confirmDelete(itemId)}
                                 variant="ghost"
                                 size="sm"
                                 className="gap-1 text-destructive hover:text-destructive"
@@ -315,7 +356,7 @@ export default function NoticePage() {
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )})}
                     </TableBody>
                   </Table>
                 </div>

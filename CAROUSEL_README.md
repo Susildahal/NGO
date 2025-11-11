@@ -1,4 +1,4 @@
-# Carousel Management System
+<!-- # Carousel Management System
 
 A complete CRUD (Create, Read, Update, Delete) carousel management system built with Redux state management.
 
@@ -204,4 +204,4 @@ formik.setFieldValue('photo', url);
 3. ✅ Update API URLs in the code
 4. ✅ Test all CRUD operations
 5. ✅ Add authentication
-6. ✅ Deploy to production
+6. ✅ Deploy to production -->

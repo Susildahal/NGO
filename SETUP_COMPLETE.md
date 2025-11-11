@@ -1,4 +1,4 @@
-# 🎠 Carousel Management System - Complete Setup
+<!-- # 🎠 Carousel Management System - Complete Setup
 
 ## ✅ What's Been Created
 
@@ -244,4 +244,4 @@ The carousel management system is fully set up with:
 - ✅ Responsive design
 - ✅ Dark mode support
 
-Just connect your backend endpoints and you're done! 🚀
+Just connect your backend endpoints and you're done! 🚀 -->

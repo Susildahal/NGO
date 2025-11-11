@@ -1,10 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
-import carouselReducer from './slices/carouselSlice';
 import noticReducer from './slices/noticSlicer';
 
 export const store = configureStore({
   reducer: {
-    carousel: carouselReducer,
+   
     notic: noticReducer,
   },
 });
