@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, In
 import toast from 'react-hot-toast';
 
 // Create axios instance with default config
-const url = process.env.NEXT_PUBLIC_API_URL || 'https://ngo-backend-cd89.onrender.com/api';
+const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: url,
   timeout: 30000, // 30 seconds
